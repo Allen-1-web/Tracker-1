@@ -9,6 +9,7 @@ import {
   BarChart3,
   Settings,
   Zap,
+  UtensilsCrossed,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -16,6 +17,7 @@ const navItems = [
   { href: '/dashboard', label: 'Дашборд', icon: LayoutDashboard },
   { href: '/habits', label: 'Привычки', icon: CheckSquare },
   { href: '/goals', label: 'Цели', icon: Target },
+  { href: '/nutrition', label: 'Питание', icon: UtensilsCrossed },
   { href: '/stats', label: 'Статистика', icon: BarChart3 },
   { href: '/settings', label: 'Настройки', icon: Settings },
 ]

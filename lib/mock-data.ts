@@ -1,5 +1,5 @@
 import { subDays, format } from 'date-fns'
-import type { Habit, HabitLog, Goal, GoalProgress, User, Category, HabitStats } from './types'
+import type { Habit, HabitLog, Goal, GoalProgress, User, Category, HabitStats, FoodItem, MealEntry, NutritionGoals } from './types'
 
 export const mockUser: User = {
   id: 'user-1',
@@ -219,6 +219,108 @@ export function getHabitLogsForRange(habitId: string, days: number): HabitLog[] 
     }
   }
   return logs.reverse()
+}
+
+// ─── Nutrition mock data ──────────────────────────────────────────────────────
+
+export const mockFoodDatabase: FoodItem[] = [
+  // Белки
+  { id: 'food-1',  name: 'Куриная грудка (варёная)',  calories: 165, protein: 31, fat: 3.6, carbs: 0,   category: 'proteins' },
+  { id: 'food-2',  name: 'Яйцо куриное',               calories: 155, protein: 13, fat: 11,  carbs: 1.1, category: 'proteins' },
+  { id: 'food-3',  name: 'Лосось (запечённый)',         calories: 208, protein: 20, fat: 13,  carbs: 0,   category: 'proteins' },
+  { id: 'food-4',  name: 'Говядина (тушёная)',          calories: 218, protein: 26, fat: 12,  carbs: 0,   category: 'proteins' },
+  { id: 'food-5',  name: 'Тунец (консервированный)',    calories: 116, protein: 26, fat: 1,   carbs: 0,   category: 'proteins' },
+  { id: 'food-6',  name: 'Творог 5%',                   calories: 121, protein: 17, fat: 5,   carbs: 3,   category: 'dairy' },
+  // Злаки
+  { id: 'food-7',  name: 'Рис (варёный)',                calories: 130, protein: 2.7, fat: 0.3, carbs: 28, category: 'grains' },
+  { id: 'food-8',  name: 'Гречка (варёная)',             calories: 110, protein: 4,   fat: 1,   carbs: 21, category: 'grains' },
+  { id: 'food-9',  name: 'Овсянка на воде',              calories: 88,  protein: 3,   fat: 1.5, carbs: 15, category: 'grains' },
+  { id: 'food-10', name: 'Хлеб цельнозерновой',          calories: 247, protein: 9,   fat: 3,   carbs: 45, category: 'grains' },
+  { id: 'food-11', name: 'Макароны (варёные)',            calories: 158, protein: 5.5, fat: 0.9, carbs: 31, category: 'grains' },
+  // Молочка
+  { id: 'food-12', name: 'Молоко 2.5%',                  calories: 52,  protein: 2.8, fat: 2.5, carbs: 4.7, category: 'dairy' },
+  { id: 'food-13', name: 'Греческий йогурт 2%',          calories: 73,  protein: 10,  fat: 2,   carbs: 4,   category: 'dairy' },
+  { id: 'food-14', name: 'Сыр чеддер',                   calories: 402, protein: 25,  fat: 33,  carbs: 1.3, category: 'dairy' },
+  // Овощи
+  { id: 'food-15', name: 'Брокколи',                     calories: 34,  protein: 2.8, fat: 0.4, carbs: 7,   category: 'vegetables' },
+  { id: 'food-16', name: 'Огурец',                       calories: 15,  protein: 0.7, fat: 0.1, carbs: 3.6, category: 'vegetables' },
+  { id: 'food-17', name: 'Помидор',                      calories: 18,  protein: 0.9, fat: 0.2, carbs: 3.9, category: 'vegetables' },
+  { id: 'food-18', name: 'Картофель (варёный)',           calories: 86,  protein: 2,   fat: 0.1, carbs: 20,  category: 'vegetables' },
+  { id: 'food-19', name: 'Морковь',                      calories: 41,  protein: 0.9, fat: 0.2, carbs: 10,  category: 'vegetables' },
+  // Фрукты
+  { id: 'food-20', name: 'Яблоко',                       calories: 52,  protein: 0.3, fat: 0.2, carbs: 14,  category: 'fruits' },
+  { id: 'food-21', name: 'Банан',                        calories: 89,  protein: 1.1, fat: 0.3, carbs: 23,  category: 'fruits' },
+  { id: 'food-22', name: 'Апельсин',                     calories: 47,  protein: 0.9, fat: 0.1, carbs: 12,  category: 'fruits' },
+  { id: 'food-23', name: 'Черника',                      calories: 57,  protein: 0.7, fat: 0.3, carbs: 14,  category: 'fruits' },
+  // Жиры
+  { id: 'food-24', name: 'Авокадо',                      calories: 160, protein: 2,   fat: 15,  carbs: 9,   category: 'fats' },
+  { id: 'food-25', name: 'Миндаль',                      calories: 579, protein: 21,  fat: 50,  carbs: 22,  category: 'fats' },
+  { id: 'food-26', name: 'Оливковое масло',              calories: 884, protein: 0,   fat: 100, carbs: 0,   category: 'fats' },
+  // Напитки
+  { id: 'food-27', name: 'Кофе чёрный',                  calories: 2,   protein: 0.3, fat: 0,   carbs: 0,   category: 'drinks' },
+  { id: 'food-28', name: 'Апельсиновый сок',             calories: 45,  protein: 0.7, fat: 0.2, carbs: 10,  category: 'drinks' },
+  // Сладкое
+  { id: 'food-29', name: 'Шоколад тёмный 70%',           calories: 598, protein: 7,   fat: 43,  carbs: 46,  category: 'sweets' },
+  { id: 'food-30', name: 'Мёд',                          calories: 304, protein: 0.3, fat: 0,   carbs: 82,  category: 'sweets' },
+]
+
+function computedEntry(
+  id: string,
+  foodId: string,
+  date: string,
+  mealType: MealEntry['mealType'],
+  amount: number
+): MealEntry {
+  const food = mockFoodDatabase.find((f) => f.id === foodId)!
+  const factor = amount / 100
+  return {
+    id,
+    foodId,
+    date,
+    mealType,
+    amount,
+    calories: Math.round(food.calories * factor),
+    protein:  Math.round(food.protein  * factor * 10) / 10,
+    fat:      Math.round(food.fat      * factor * 10) / 10,
+    carbs:    Math.round(food.carbs    * factor * 10) / 10,
+  }
+}
+
+const today    = format(new Date(), 'yyyy-MM-dd')
+const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd')
+const twoDaysAgo = format(subDays(new Date(), 2), 'yyyy-MM-dd')
+
+export const mockMealEntries: MealEntry[] = [
+  // Вчера
+  computedEntry('me-1',  'food-9',  yesterday, 'breakfast', 200),
+  computedEntry('me-2',  'food-12', yesterday, 'breakfast', 200),
+  computedEntry('me-3',  'food-1',  yesterday, 'lunch',     200),
+  computedEntry('me-4',  'food-7',  yesterday, 'lunch',     150),
+  computedEntry('me-5',  'food-15', yesterday, 'lunch',     100),
+  computedEntry('me-6',  'food-21', yesterday, 'snack',     120),
+  computedEntry('me-7',  'food-4',  yesterday, 'dinner',    180),
+  computedEntry('me-8',  'food-8',  yesterday, 'dinner',    150),
+  // Позавчера
+  computedEntry('me-9',  'food-2',  twoDaysAgo, 'breakfast', 150),
+  computedEntry('me-10', 'food-10', twoDaysAgo, 'breakfast', 80),
+  computedEntry('me-11', 'food-3',  twoDaysAgo, 'lunch',     200),
+  computedEntry('me-12', 'food-11', twoDaysAgo, 'lunch',     200),
+  computedEntry('me-13', 'food-20', twoDaysAgo, 'snack',     180),
+  computedEntry('me-14', 'food-6',  twoDaysAgo, 'snack',     150),
+  computedEntry('me-15', 'food-1',  twoDaysAgo, 'dinner',    200),
+  computedEntry('me-16', 'food-18', twoDaysAgo, 'dinner',    200),
+  // Сегодня
+  computedEntry('me-17', 'food-9',  today, 'breakfast', 200),
+  computedEntry('me-18', 'food-13', today, 'breakfast', 150),
+  computedEntry('me-19', 'food-1',  today, 'lunch',     200),
+  computedEntry('me-20', 'food-7',  today, 'lunch',     150),
+]
+
+export const mockNutritionGoals: NutritionGoals = {
+  calories: 2200,
+  protein:  150,
+  fat:       70,
+  carbs:    250,
 }
 
 export function getWeeklyActivity(): { day: string; completed: number; total: number }[] {

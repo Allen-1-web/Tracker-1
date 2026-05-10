@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus, UtensilsCrossed } from 'lucide-react'
 import { AppLayout } from '@/components/layout/app-layout'
 import { DashboardGreeting } from '@/components/dashboard/dashboard-greeting'
 import { TodayProgress } from '@/components/dashboard/today-progress'
@@ -16,7 +16,7 @@ import { motivationalQuotes, mockHabitStats } from '@/lib/mock-data'
 import { format } from 'date-fns'
 
 export default function DashboardPage() {
-  const { user, habits, habitLogs, goals } = useStore()
+  const { user, habits, habitLogs, goals, mealEntries, nutritionGoals } = useStore()
 
   const today = format(new Date(), 'yyyy-MM-dd')
   const todayDow = new Date().getDay()
@@ -36,6 +36,10 @@ export default function DashboardPage() {
   )
 
   const quote = motivationalQuotes[new Date().getDay() % motivationalQuotes.length]
+
+  const todayCalories = mealEntries
+    .filter((e) => e.date === today)
+    .reduce((sum, e) => sum + e.calories, 0)
 
   return (
     <AppLayout title="Дашборд">
@@ -60,6 +64,25 @@ export default function DashboardPage() {
           streak={maxStreak}
           completionRate={avgRate}
         />
+
+        <Link href="/nutrition" className="block">
+          <Card className="transition-colors hover:bg-[var(--accent)] cursor-pointer border-[var(--border)]">
+            <CardContent className="flex items-center justify-between gap-4 p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100">
+                  <UtensilsCrossed className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-[var(--foreground)]">Питание и КБЖУ</p>
+                  <p className="text-sm text-[var(--muted-foreground)]">
+                    Сегодня: {todayCalories} / {nutritionGoals.calories} ккал · дневник и рекомендации
+                  </p>
+                </div>
+              </div>
+              <span className="text-sm font-medium text-[var(--primary)] shrink-0">Открыть →</span>
+            </CardContent>
+          </Card>
+        </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Today habits */}

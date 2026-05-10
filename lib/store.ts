@@ -2,7 +2,7 @@
 
 import { create } from 'zustand'
 import { format } from 'date-fns'
-import type { Habit, HabitLog, Goal, GoalProgress, User, Category } from './types'
+import type { Habit, HabitLog, Goal, GoalProgress, User, Category, FoodItem, MealEntry, NutritionGoals } from './types'
 import {
   mockUser,
   mockHabits,
@@ -10,6 +10,9 @@ import {
   mockGoals,
   mockGoalProgress,
   mockCategories,
+  mockFoodDatabase,
+  mockMealEntries,
+  mockNutritionGoals,
 } from './mock-data'
 
 interface AppStore {
@@ -19,6 +22,11 @@ interface AppStore {
   goals: Goal[]
   goalProgress: GoalProgress[]
   categories: Category[]
+
+  // Nutrition state
+  foodDatabase: FoodItem[]
+  mealEntries: MealEntry[]
+  nutritionGoals: NutritionGoals
 
   // Habit actions
   addHabit: (habit: Omit<Habit, 'id' | 'createdAt'>) => void
@@ -40,6 +48,11 @@ interface AppStore {
   addCategory: (cat: Omit<Category, 'id'>) => void
   updateCategory: (id: string, updates: Partial<Category>) => void
   deleteCategory: (id: string) => void
+
+  // Nutrition actions
+  addMealEntry: (entry: Omit<MealEntry, 'id'>) => void
+  deleteMealEntry: (id: string) => void
+  updateNutritionGoals: (goals: Partial<NutritionGoals>) => void
 }
 
 export const useStore = create<AppStore>((set) => ({
@@ -49,6 +62,9 @@ export const useStore = create<AppStore>((set) => ({
   goals: mockGoals,
   goalProgress: mockGoalProgress,
   categories: mockCategories,
+  foodDatabase: mockFoodDatabase,
+  mealEntries: mockMealEntries,
+  nutritionGoals: mockNutritionGoals,
 
   addHabit: (habit) =>
     set((state) => ({
@@ -140,5 +156,20 @@ export const useStore = create<AppStore>((set) => ({
   deleteCategory: (id) =>
     set((state) => ({
       categories: state.categories.filter((c) => c.id !== id),
+    })),
+
+  addMealEntry: (entry) =>
+    set((state) => ({
+      mealEntries: [...state.mealEntries, { ...entry, id: `me-${Date.now()}` }],
+    })),
+
+  deleteMealEntry: (id) =>
+    set((state) => ({
+      mealEntries: state.mealEntries.filter((e) => e.id !== id),
+    })),
+
+  updateNutritionGoals: (goals) =>
+    set((state) => ({
+      nutritionGoals: { ...state.nutritionGoals, ...goals },
     })),
 }))

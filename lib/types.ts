@@ -69,3 +69,51 @@ export interface HabitStats {
   completionRate90: number
   totalCompleted: number
 }
+
+// ─── Nutrition / КБЖУ ────────────────────────────────────────────────────────
+
+export type FoodCategory =
+  | 'proteins'
+  | 'grains'
+  | 'dairy'
+  | 'vegetables'
+  | 'fruits'
+  | 'fats'
+  | 'drinks'
+  | 'sweets'
+  | 'other'
+
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+
+/** Nutritional values are per 100 g / 100 ml */
+export interface FoodItem {
+  id: string
+  name: string
+  calories: number
+  protein: number
+  fat: number
+  carbs: number
+  category: FoodCategory
+}
+
+/** A single logged food entry */
+export interface MealEntry {
+  id: string
+  foodId: string
+  date: string      // 'YYYY-MM-DD'
+  mealType: MealType
+  amount: number    // grams / ml
+  // denormalised totals (computed from amount)
+  calories: number
+  protein: number
+  fat: number
+  carbs: number
+}
+
+/** User's daily macro targets */
+export interface NutritionGoals {
+  calories: number
+  protein: number
+  fat: number
+  carbs: number
+}
