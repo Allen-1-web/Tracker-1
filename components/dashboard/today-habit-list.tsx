@@ -2,6 +2,7 @@
 
 import { useStore } from '@/lib/store'
 import { Checkbox } from '@/components/ui/checkbox'
+import { EmptyState } from '@/components/shared/empty-state'
 import { format } from 'date-fns'
 import type { Habit } from '@/lib/types'
 
@@ -14,10 +15,8 @@ interface HabitCheckItemProps {
 function HabitCheckItem({ habit, completed, onToggle }: HabitCheckItemProps) {
   return (
     <div
-      className={`flex items-center gap-3 rounded-xl border p-4 transition-colors cursor-pointer ${
-        completed
-          ? 'border-[var(--primary)]/30 bg-[var(--primary)]/5'
-          : 'border-[var(--border)] hover:bg-[var(--accent)]'
+      className={`flex items-center gap-3 py-2.5 -mx-1 px-1 rounded-lg transition-colors cursor-pointer ${
+        completed ? 'bg-[var(--primary)]/6' : 'hover:bg-[var(--muted)]/35'
       }`}
       onClick={onToggle}
     >
@@ -68,16 +67,28 @@ export function TodayHabitList() {
   })
 
   if (sortedHabits.length === 0) {
+    const hasAnyHabits = habits.some((h) => !h.isArchived)
     return (
-      <div className="text-center py-8 text-[var(--muted-foreground)]">
-        <p className="text-lg">🎉</p>
-        <p className="text-sm mt-1">На сегодня привычек нет</p>
-      </div>
+      <EmptyState
+        icon={hasAnyHabits ? '📅' : '✨'}
+        title={hasAnyHabits ? 'Сегодня без привычек' : 'Нет активных привычек'}
+        description={
+          hasAnyHabits
+            ? 'На сегодня по расписанию нет ни одной привычки — отличный день для отдыха или добавьте ещё одну.'
+            : 'Создайте привычку, чтобы она появилась в списке на сегодня.'
+        }
+        compact
+        action={
+          hasAnyHabits
+            ? { label: 'К привычкам', href: '/habits' }
+            : { label: 'Добавить привычку', href: '/habits' }
+        }
+      />
     )
   }
 
   return (
-    <div className="space-y-2">
+    <div className="divide-y divide-[var(--border)]/70">
       {sortedHabits.map((habit) => (
         <HabitCheckItem
           key={habit.id}

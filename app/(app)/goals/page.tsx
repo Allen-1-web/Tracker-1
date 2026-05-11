@@ -29,22 +29,26 @@ export default function GoalsPage() {
 
   return (
     <AppLayout title="Цели">
-      <div className="max-w-4xl space-y-6">
+      <div className="max-w-4xl space-y-4 min-w-0">
         {/* Controls */}
-        <div className="flex items-center justify-between gap-4">
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-            <TabsList>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="w-full min-w-0 overflow-x-auto pb-0.5">
+            <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
+              <TabsList className="w-max max-w-full">
               <TabsTrigger value="all">Все</TabsTrigger>
               <TabsTrigger value="active">В процессе</TabsTrigger>
               <TabsTrigger value="completed">Выполнены</TabsTrigger>
               <TabsTrigger value="overdue">Просрочены</TabsTrigger>
             </TabsList>
-          </Tabs>
-          <AddGoalModal />
+            </Tabs>
+          </div>
+          <div className="shrink-0 self-start sm:self-auto">
+            <AddGoalModal />
+          </div>
         </div>
 
         {/* Summary */}
-        <div className="flex gap-4 text-sm text-[var(--muted-foreground)]">
+        <div className="flex gap-3 text-sm text-[var(--muted-foreground)]">
           <span>{goals.length} целей всего</span>
           <span>·</span>
           <span>{goals.filter((g) => (g.currentValue / g.targetValue) >= 1).length} выполнено</span>
@@ -52,13 +56,21 @@ export default function GoalsPage() {
 
         {/* Goals grid */}
         {filtered.length === 0 ? (
-          <EmptyState
-            icon="🎯"
-            title="Целей нет"
-            description="Добавьте первую цель и начните отслеживать прогресс"
-          />
+          goals.length === 0 ? (
+            <EmptyState
+              icon="🎯"
+              title="Целей нет"
+              description="Добавьте первую цель и начните отслеживать прогресс"
+            />
+          ) : (
+            <EmptyState
+              icon="🔍"
+              title="Нет целей по фильтру"
+              description="Попробуйте другой фильтр или сбросьте отбор — подходящих целей не найдено."
+            />
+          )
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {filtered.map((goal) => (
               <GoalCard
                 key={goal.id}

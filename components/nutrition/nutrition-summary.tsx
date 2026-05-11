@@ -67,7 +67,7 @@ export function NutritionSummary({ entries, goals }: NutritionSummaryProps) {
       {/* Calorie ring card */}
       <Card>
         <CardContent className="p-5">
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-6">
             {/* SVG ring */}
             <div className="relative shrink-0">
               <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
@@ -88,12 +88,12 @@ export function NutritionSummary({ entries, goals }: NutritionSummaryProps) {
               </div>
             </div>
 
-            <div className="flex-1 space-y-1">
+            <div className="min-w-0 flex-1 space-y-1 text-center sm:text-left">
               <p className="font-semibold text-[var(--foreground)]">Калории за сегодня</p>
               <p className="text-sm text-[var(--muted-foreground)]">
                 Цель: {goals.calories} ккал · {calPct > 100 ? `перебор на ${totals.calories - goals.calories}` : `осталось ${goals.calories - totals.calories}`} ккал
               </p>
-              <div className="flex gap-4 pt-2 text-xs text-[var(--muted-foreground)]">
+              <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 pt-2 text-xs text-[var(--muted-foreground)] sm:justify-start">
                 {stats.slice(1).map((s) => (
                   <span key={s.label}>
                     <span className="font-medium text-[var(--foreground)]">{s.value}г</span> {s.label.toLowerCase()}

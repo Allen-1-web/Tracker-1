@@ -35,7 +35,7 @@ const DialogContent = React.forwardRef<
       ref={ref}
       className={cn(
         'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4',
-        'bg-[var(--card)] p-6 shadow-xl rounded-2xl border border-[var(--border)]',
+        'bg-[var(--card)] p-6 shadow-xl rounded-2xl border-0',
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
@@ -93,6 +93,36 @@ const DialogDescription = React.forwardRef<
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
+/** Выезжающая панель слева (меню на мобильном) — без центрирования модалки */
+const DrawerContent = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+  <DialogPortal>
+    <DialogOverlay />
+    <DialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        'fixed inset-y-0 left-0 z-50 flex h-full w-[min(100vw,20rem)] flex-col outline-none',
+        'bg-[var(--card)] shadow-xl border-r border-[var(--border)]',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out',
+        'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+        'data-[state=closed]:slide-out-to-left-4 data-[state=open]:slide-in-from-left-4',
+        'duration-200',
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <DialogPrimitive.Close className="absolute right-3 top-3 rounded-sm p-2 opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-[var(--ring)]">
+        <X className="h-4 w-4" />
+        <span className="sr-only">Закрыть</span>
+      </DialogPrimitive.Close>
+    </DialogPrimitive.Content>
+  </DialogPortal>
+))
+DrawerContent.displayName = 'DrawerContent'
+
 export {
   Dialog,
   DialogPortal,
@@ -100,6 +130,7 @@ export {
   DialogClose,
   DialogTrigger,
   DialogContent,
+  DrawerContent,
   DialogHeader,
   DialogFooter,
   DialogTitle,

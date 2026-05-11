@@ -19,12 +19,12 @@ export function GoalCard({ goal, linkedHabitIcons = [] }: GoalCardProps) {
 
   return (
     <Link href={`/goals/${goal.id}`}>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-        <CardContent className="p-5 flex flex-col gap-3 h-full">
+      <Card className="h-full cursor-pointer border-0 bg-transparent shadow-none hover:bg-[var(--muted)]/35 dark:hover:bg-[var(--muted)]/45">
+        <CardContent className="p-3.5 flex flex-col gap-2 h-full">
           {/* Header */}
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10">
-              <Target className="h-5 w-5 text-[var(--primary)]" />
+          <div className="flex items-start gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)]/10">
+              <Target className="h-4 w-4 text-[var(--primary)]" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-[var(--foreground)] line-clamp-2">{goal.name}</p>
@@ -33,7 +33,7 @@ export function GoalCard({ goal, linkedHabitIcons = [] }: GoalCardProps) {
           </div>
 
           {/* Progress */}
-          <div className="space-y-1.5 flex-1">
+          <div className="space-y-1 flex-1">
             <div className="flex justify-between text-sm">
               <span className="font-medium">
                 {goal.currentValue}/{goal.targetValue} {goal.unit}

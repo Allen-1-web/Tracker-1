@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts'
+import { EmptyState } from '@/components/shared/empty-state'
 import type { MealEntry, NutritionGoals } from '@/lib/types'
 
 interface WeeklyNutritionChartProps {
@@ -26,6 +27,21 @@ export function WeeklyNutritionChart({ entries, goals }: WeeklyNutritionChartPro
     const label = format(subDays(new Date(), 6 - i), 'EEE', { locale: ru })
     return { date, label: label.charAt(0).toUpperCase() + label.slice(1), calories }
   })
+
+  const hasWeekData = data.some((d) => d.calories > 0)
+  if (!hasWeekData) {
+    return (
+      <div className="flex min-h-[180px] items-center justify-center">
+        <EmptyState
+          icon="📊"
+          title="Нет данных за неделю"
+          description="Добавьте приёмы пищи за последние 7 дней — столбики появятся на графике."
+          compact
+          className="py-4"
+        />
+      </div>
+    )
+  }
 
   return (
     <ResponsiveContainer width="100%" height={180}>

@@ -1,6 +1,7 @@
 'use client'
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
+import { EmptyState } from '@/components/shared/empty-state'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import type { GoalProgress } from '@/lib/types'
@@ -19,8 +20,14 @@ export function GoalProgressChart({ progressEntries, targetValue, unit = '' }: G
 
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-[var(--muted-foreground)] text-sm">
-        Нет данных о прогрессе
+      <div className="flex min-h-[12rem] items-center justify-center">
+        <EmptyState
+          icon="📉"
+          title="Нет данных для графика"
+          description="Как только появятся записи прогресса, здесь отобразится динамика."
+          compact
+          className="py-4"
+        />
       </div>
     )
   }

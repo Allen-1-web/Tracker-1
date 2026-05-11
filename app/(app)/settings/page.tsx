@@ -1,6 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -9,8 +12,21 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
+import { EmptyState } from '@/components/shared/empty-state'
 import { useStore } from '@/lib/store'
 import type { Category } from '@/lib/types'
+import { formFieldErrorClass, cn } from '@/lib/utils'
+
+const profileSchema = z.object({
+  name: z.string().min(2, 'Минимум 2 символа'),
+  email: z.string().email('Введите корректный email'),
+})
+type ProfileForm = z.infer<typeof profileSchema>
+
+const newCategorySchema = z.object({
+  name: z.string().min(1, 'Введите название').max(40, 'Не длиннее 40 символов'),
+  icon: z.string().min(1, 'Укажите эмодзи-иконку').max(4),
+})
 
 export default function SettingsPage() {
   const { user, updateUser, categories, addCategory, updateCategory, deleteCategory } = useStore()
@@ -19,12 +35,43 @@ export default function SettingsPage() {
   const [newCatIcon, setNewCatIcon] = useState('📌')
   const [editingCatId, setEditingCatId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
+  const [editNameError, setEditNameError] = useState<string | null>(null)
+  const [newCatErrors, setNewCatErrors] = useState<{ name?: string; icon?: string }>({})
+
+  const {
+    register: registerProfile,
+    handleSubmit: handleProfileSubmit,
+    reset: resetProfile,
+    formState: { errors: profileErrors },
+  } = useForm<ProfileForm>({
+    resolver: zodResolver(profileSchema),
+    mode: 'onTouched',
+    defaultValues: { name: user.name, email: user.email },
+  })
+
+  useEffect(() => {
+    resetProfile({ name: user.name, email: user.email })
+  }, [user.name, user.email, resetProfile])
+
+  const onProfileSave = (data: ProfileForm) => {
+    updateUser({ name: data.name, email: data.email })
+  }
 
   const handleAddCategory = () => {
-    if (!newCatName.trim()) return
+    setNewCatErrors({})
+    const parsed = newCategorySchema.safeParse({ name: newCatName.trim(), icon: newCatIcon.trim() || '📌' })
+    if (!parsed.success) {
+      const e: { name?: string; icon?: string } = {}
+      for (const issue of parsed.error.issues) {
+        const k = issue.path[0]
+        if (k === 'name' || k === 'icon') e[k] = issue.message
+      }
+      setNewCatErrors(e)
+      return
+    }
     addCategory({
-      name: newCatName.trim(),
-      icon: newCatIcon,
+      name: parsed.data.name,
+      icon: parsed.data.icon,
       color: '#6366f1',
     })
     setNewCatName('')
@@ -32,7 +79,13 @@ export default function SettingsPage() {
   }
 
   const handleSaveEdit = (cat: Category) => {
-    updateCategory(cat.id, { name: editName })
+    setEditNameError(null)
+    const r = z.string().min(1, 'Название не может быть пустым').max(40).safeParse(editName.trim())
+    if (!r.success) {
+      setEditNameError(r.error.issues[0]?.message ?? 'Ошибка')
+      return
+    }
+    updateCategory(cat.id, { name: r.data })
     setEditingCatId(null)
   }
 
@@ -47,29 +100,42 @@ export default function SettingsPage() {
             <CardDescription>Ваши личные данные</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <form onSubmit={handleProfileSubmit(onProfileSave)} className="space-y-4" noValidate>
             <div className="flex items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--primary)] text-white text-2xl font-bold">
                 {user.name.charAt(0).toUpperCase()}
               </div>
-              <Button variant="outline" size="sm">Загрузить фото</Button>
+              <Button type="button" variant="outline" size="sm">Загрузить фото</Button>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label>Имя</Label>
+                <Label htmlFor="settings-name">Имя</Label>
                 <Input
-                  defaultValue={user.name}
-                  onBlur={(e) => updateUser({ name: e.target.value })}
+                  id="settings-name"
+                  aria-invalid={!!profileErrors.name}
+                  className={formFieldErrorClass(!!profileErrors.name)}
+                  {...registerProfile('name')}
                 />
+                {profileErrors.name && (
+                  <p className="text-xs text-[var(--destructive)]">{profileErrors.name.message}</p>
+                )}
               </div>
               <div className="space-y-1.5">
-                <Label>Email</Label>
+                <Label htmlFor="settings-email">Email</Label>
                 <Input
+                  id="settings-email"
                   type="email"
-                  defaultValue={user.email}
-                  onBlur={(e) => updateUser({ email: e.target.value })}
+                  aria-invalid={!!profileErrors.email}
+                  className={formFieldErrorClass(!!profileErrors.email)}
+                  {...registerProfile('email')}
                 />
+                {profileErrors.email && (
+                  <p className="text-xs text-[var(--destructive)]">{profileErrors.email.message}</p>
+                )}
               </div>
             </div>
+            <Button type="submit" className="w-full sm:w-auto">Сохранить профиль</Button>
+            </form>
           </CardContent>
         </Card>
 
@@ -156,19 +222,48 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              {categories.map((cat) => (
+              {categories.length === 0 ? (
+                <EmptyState
+                  icon="📂"
+                  title="Категорий пока нет"
+                  description="Добавьте категорию ниже — они используются для привычек и целей."
+                  compact
+                  className="py-6"
+                />
+              ) : (
+              categories.map((cat) => (
                 <div key={cat.id} className="flex items-center gap-3 rounded-lg border border-[var(--border)] p-3">
                   <span className="text-xl">{cat.icon}</span>
                   {editingCatId === cat.id ? (
-                    <>
-                      <Input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="flex-1 h-7 text-sm"
-                      />
-                      <Button size="sm" onClick={() => handleSaveEdit(cat)}>Сохранить</Button>
-                      <Button size="sm" variant="ghost" onClick={() => setEditingCatId(null)}>Отмена</Button>
-                    </>
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={editName}
+                          onChange={(e) => {
+                            setEditName(e.target.value)
+                            setEditNameError(null)
+                          }}
+                          className={cn('h-7 min-w-0 flex-1 text-sm', formFieldErrorClass(!!editNameError))}
+                        />
+                        <Button size="sm" type="button" onClick={() => handleSaveEdit(cat)}>
+                          Сохранить
+                        </Button>
+                        <Button
+                          size="sm"
+                          type="button"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditingCatId(null)
+                            setEditNameError(null)
+                          }}
+                        >
+                          Отмена
+                        </Button>
+                      </div>
+                      {editNameError && (
+                        <p className="text-xs text-[var(--destructive)]">{editNameError}</p>
+                      )}
+                    </div>
                   ) : (
                     <>
                       <span
@@ -181,7 +276,11 @@ export default function SettingsPage() {
                         size="icon"
                         variant="ghost"
                         className="h-8 w-8"
-                        onClick={() => { setEditingCatId(cat.id); setEditName(cat.name) }}
+                        onClick={() => {
+                          setEditingCatId(cat.id)
+                          setEditName(cat.name)
+                          setEditNameError(null)
+                        }}
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
@@ -196,25 +295,41 @@ export default function SettingsPage() {
                     </>
                   )}
                 </div>
-              ))}
+              ))
+              )}
             </div>
             {/* Add category */}
-            <div className="flex gap-2">
+            <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
               <Input
                 placeholder="Название категории"
                 value={newCatName}
-                onChange={(e) => setNewCatName(e.target.value)}
+                onChange={(e) => {
+                  setNewCatName(e.target.value)
+                  setNewCatErrors((p) => ({ ...p, name: undefined }))
+                }}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                aria-invalid={!!newCatErrors.name}
+                className={cn('min-w-[12rem] flex-1', formFieldErrorClass(!!newCatErrors.name))}
               />
               <Input
                 placeholder="🏷️"
                 value={newCatIcon}
-                onChange={(e) => setNewCatIcon(e.target.value)}
-                className="w-20"
+                onChange={(e) => {
+                  setNewCatIcon(e.target.value)
+                  setNewCatErrors((p) => ({ ...p, icon: undefined }))
+                }}
+                className={cn('w-20', formFieldErrorClass(!!newCatErrors.icon))}
               />
-              <Button onClick={handleAddCategory} disabled={!newCatName.trim()}>
+              <Button type="button" onClick={handleAddCategory}>
                 <Plus className="h-4 w-4" />
               </Button>
+            </div>
+            {(newCatErrors.name || newCatErrors.icon) && (
+              <p className="text-xs text-[var(--destructive)]">
+                {[newCatErrors.name, newCatErrors.icon].filter(Boolean).join(' · ')}
+              </p>
+            )}
             </div>
           </CardContent>
         </Card>

@@ -10,7 +10,7 @@ function Skeleton({ className }: { className?: string }) {
 
 export function HabitCardSkeleton() {
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 space-y-3">
+    <div className="rounded-lg bg-[var(--muted)]/25 p-4 space-y-2.5">
       <div className="flex items-center gap-3">
         <Skeleton className="h-10 w-10 rounded-lg" />
         <div className="space-y-2 flex-1">
@@ -29,7 +29,7 @@ export function HabitCardSkeleton() {
 
 export function GoalCardSkeleton() {
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 space-y-3">
+    <div className="rounded-lg bg-[var(--muted)]/25 p-4 space-y-2.5">
       <Skeleton className="h-5 w-40" />
       <Skeleton className="h-3 w-full" />
       <Skeleton className="h-2 w-full" />

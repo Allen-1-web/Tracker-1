@@ -1,6 +1,7 @@
 import { format, parseISO } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { CheckCircle2, XCircle } from 'lucide-react'
+import { EmptyState } from '@/components/shared/empty-state'
 import type { HabitLog } from '@/lib/types'
 
 interface HabitHistoryProps {
@@ -9,6 +10,17 @@ interface HabitHistoryProps {
 
 export function HabitHistory({ logs }: HabitHistoryProps) {
   const recent = [...logs].reverse().slice(0, 30)
+
+  if (recent.length === 0) {
+    return (
+      <EmptyState
+        icon="📋"
+        title="История пуста"
+        description="За выбранный период ещё нет отметок о выполнении — отметьте день в календаре выше."
+        compact
+      />
+    )
+  }
 
   return (
     <div className="space-y-1">

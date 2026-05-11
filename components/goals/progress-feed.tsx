@@ -1,6 +1,7 @@
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { TrendingUp } from 'lucide-react'
+import { EmptyState } from '@/components/shared/empty-state'
 import type { GoalProgress } from '@/lib/types'
 
 interface ProgressFeedProps {
@@ -13,9 +14,12 @@ export function ProgressFeed({ entries, unit = '' }: ProgressFeedProps) {
 
   if (sorted.length === 0) {
     return (
-      <p className="text-sm text-[var(--muted-foreground)] text-center py-4">
-        Записей прогресса нет
-      </p>
+      <EmptyState
+        icon="📈"
+        title="Записей прогресса нет"
+        description="Добавьте первую отметку по цели — здесь появится история изменений."
+        compact
+      />
     )
   }
 

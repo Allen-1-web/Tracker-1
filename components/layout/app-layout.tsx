@@ -1,4 +1,8 @@
-import { Sidebar } from './sidebar'
+'use client'
+
+import { useState } from 'react'
+import { Dialog, DrawerContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Sidebar, MobileSidebarPanel } from './sidebar'
 import { Topbar } from './topbar'
 
 interface AppLayoutProps {
@@ -7,12 +11,21 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, title }: AppLayoutProps) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-[var(--background)]">
       <Sidebar />
-      <div className="ml-64 flex flex-col min-h-screen">
-        <Topbar title={title} />
-        <main className="flex-1 p-6">{children}</main>
+      <Dialog open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <DrawerContent>
+          <DialogTitle className="sr-only">Навигация по разделам</DialogTitle>
+          <DialogDescription className="sr-only">Переход к разделам приложения</DialogDescription>
+          <MobileSidebarPanel onNavigate={() => setMobileNavOpen(false)} />
+        </DrawerContent>
+      </Dialog>
+      <div className="flex min-h-screen w-full min-w-0 flex-col md:ml-64">
+        <Topbar title={title} onOpenMobileNav={() => setMobileNavOpen(true)} />
+        <main className="min-w-0 flex-1 p-3 sm:p-5">{children}</main>
       </div>
     </div>
   )

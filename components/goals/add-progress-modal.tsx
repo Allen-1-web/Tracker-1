@@ -17,9 +17,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useStore } from '@/lib/store'
+import { formFieldErrorClass } from '@/lib/utils'
 
 const schema = z.object({
-  value: z.number().min(0, 'Введите значение'),
+  value: z
+    .custom<number>(
+      (v) => typeof v === 'number' && Number.isFinite(v) && !Number.isNaN(v) && v >= 0,
+      { message: 'Введите неотрицательное число' }
+    ),
   note: z.string().optional(),
 })
 type FormData = z.infer<typeof schema>
@@ -36,6 +41,7 @@ export function AddProgressModal({ goalId, unit, currentValue }: AddProgressModa
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    mode: 'onTouched',
     defaultValues: { value: currentValue },
   })
 
@@ -61,10 +67,17 @@ export function AddProgressModal({ goalId, unit, currentValue }: AddProgressModa
         <DialogHeader>
           <DialogTitle>Обновить прогресс</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="space-y-1.5">
             <Label>Текущее значение {unit ? `(${unit})` : ''}</Label>
-            <Input type="number" min={0} step="0.1" {...register('value', { valueAsNumber: true })} />
+            <Input
+              type="number"
+              min={0}
+              step="0.1"
+              aria-invalid={!!errors.value}
+              className={formFieldErrorClass(!!errors.value)}
+              {...register('value', { valueAsNumber: true })}
+            />
             {errors.value && <p className="text-xs text-[var(--destructive)]">{errors.value.message}</p>}
           </div>
           <div className="space-y-1.5">

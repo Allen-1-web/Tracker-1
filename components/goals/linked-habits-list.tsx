@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { EmptyState } from '@/components/shared/empty-state'
 import { StreakBadge } from '@/components/shared/streak-badge'
 import type { Habit, HabitStats } from '@/lib/types'
 
@@ -9,7 +10,15 @@ interface LinkedHabitsListProps {
 
 export function LinkedHabitsList({ habits, stats }: LinkedHabitsListProps) {
   if (habits.length === 0) {
-    return <p className="text-sm text-[var(--muted-foreground)]">Нет связанных привычек</p>
+    return (
+      <EmptyState
+        icon="🔗"
+        title="Нет связанных привычек"
+        description="Свяжите привычку с целью в настройках привычки или выберите существующую."
+        compact
+        action={{ label: 'К привычкам', href: '/habits' }}
+      />
+    )
   }
 
   return (

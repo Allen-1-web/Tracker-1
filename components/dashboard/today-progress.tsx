@@ -13,9 +13,9 @@ export function TodayProgress({ completed, total, streak, completionRate }: Toda
   const pct = total === 0 ? 0 : Math.round((completed / total) * 100)
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <Card>
-        <CardContent className="p-5">
+        <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100">
               <CheckCircle2 className="h-5 w-5 text-indigo-600" />
@@ -31,7 +31,7 @@ export function TodayProgress({ completed, total, streak, completionRate }: Toda
       </Card>
 
       <Card>
-        <CardContent className="p-5">
+        <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100">
               <Flame className="h-5 w-5 text-orange-500" />
@@ -48,7 +48,7 @@ export function TodayProgress({ completed, total, streak, completionRate }: Toda
       </Card>
 
       <Card>
-        <CardContent className="p-5">
+        <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100">
               <TrendingUp className="h-5 w-5 text-green-600" />

@@ -2,12 +2,11 @@
 
 import { useState, useMemo } from 'react'
 import { Search, Plus } from 'lucide-react'
-import { format } from 'date-fns'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useStore } from '@/lib/store'
 import type { FoodItem, MealType } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import { cn, formFieldErrorClass } from '@/lib/utils'
 
 const MEAL_TYPES: { value: MealType; label: string }[] = [
   { value: 'breakfast', label: 'Завтрак' },
@@ -39,6 +38,7 @@ export function FoodSearch({ date }: FoodSearchProps) {
   const [amount, setAmount] = useState('100')
   const [mealType, setMealType] = useState<MealType>('lunch')
   const [added, setAdded] = useState(false)
+  const [amountError, setAmountError] = useState<string | null>(null)
 
   const results = useMemo(() => {
     if (!query.trim()) return []
@@ -53,8 +53,12 @@ export function FoodSearch({ date }: FoodSearchProps) {
 
   function handleAdd() {
     if (!selected) return
-    const g = parseFloat(amount)
-    if (!g || g <= 0) return
+    const g = parseFloat(amount.replace(',', '.'))
+    if (!Number.isFinite(g) || g <= 0) {
+      setAmountError('Введите количество в граммах больше 0')
+      return
+    }
+    setAmountError(null)
     const factor = g / 100
     addMealEntry({
       foodId:   selected.id,
@@ -77,7 +81,7 @@ export function FoodSearch({ date }: FoodSearchProps) {
 
   const preview = selected
     ? (() => {
-        const g = parseFloat(amount) || 0
+        const g = parseFloat(amount.replace(',', '.')) || 0
         const f = g / 100
         return {
           calories: Math.round(selected.calories * f),
@@ -87,6 +91,9 @@ export function FoodSearch({ date }: FoodSearchProps) {
         }
       })()
     : null
+
+  const parsedAmount = parseFloat(amount.replace(',', '.'))
+  const canAddMeal = !!selected && Number.isFinite(parsedAmount) && parsedAmount > 0
 
   return (
     <div className="space-y-4">
@@ -155,7 +162,12 @@ export function FoodSearch({ date }: FoodSearchProps) {
                 type="number"
                 min="1"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  setAmount(e.target.value)
+                  setAmountError(null)
+                }}
+                aria-invalid={!!amountError}
+                className={formFieldErrorClass(!!amountError)}
               />
             </div>
             <div className="space-y-1">
@@ -179,6 +191,8 @@ export function FoodSearch({ date }: FoodSearchProps) {
             </div>
           </div>
 
+          {amountError && <p className="text-xs text-[var(--destructive)]">{amountError}</p>}
+
           {/* Preview */}
           {preview && (
             <div className="grid grid-cols-4 gap-2 text-center bg-[var(--accent)] rounded-lg py-2">
@@ -198,8 +212,9 @@ export function FoodSearch({ date }: FoodSearchProps) {
 
           <Button
             className="w-full"
+            type="button"
             onClick={handleAdd}
-            disabled={added}
+            disabled={added || !canAddMeal}
           >
             {added ? '✓ Добавлено!' : (
               <><Plus className="h-4 w-4 mr-1" /> Добавить в дневник</>

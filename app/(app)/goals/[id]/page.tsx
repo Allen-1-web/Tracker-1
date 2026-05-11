@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Trash2, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { AppLayout } from '@/components/layout/app-layout'
+import { EmptyState } from '@/components/shared/empty-state'
 import { GoalProgressChart } from '@/components/goals/goal-progress-chart'
 import { LinkedHabitsList } from '@/components/goals/linked-habits-list'
 import { ProgressFeed } from '@/components/goals/progress-feed'
@@ -28,7 +29,12 @@ export default function GoalDetailPage() {
   if (!goal) {
     return (
       <AppLayout title="Цель не найдена">
-        <Link href="/goals" className="text-[var(--primary)] hover:underline">← Назад</Link>
+        <EmptyState
+          icon="🔍"
+          title="Цель не найдена"
+          description="Возможно, она удалена или ссылка устарела."
+          action={{ label: 'К списку целей', href: '/goals' }}
+        />
       </AppLayout>
     )
   }
@@ -43,29 +49,31 @@ export default function GoalDetailPage() {
 
   return (
     <AppLayout title={goal.name}>
-      <div className="max-w-4xl space-y-6">
+      <div className="max-w-4xl space-y-6 min-w-0">
         {/* Header */}
-        <div className="flex items-start gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/goals">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold">{goal.name}</h2>
-            <div className="flex items-center gap-3 mt-2">
-              <CategoryBadge name={goal.category} />
-              <span className={`flex items-center gap-1 text-sm ${isOverdue ? 'text-red-500' : isCompleted ? 'text-green-600' : 'text-[var(--muted-foreground)]'}`}>
-                <Clock className="h-3.5 w-3.5" />
-                {isCompleted ? 'Выполнено!' : isOverdue ? `Просрочена на ${Math.abs(daysLeft)} дн.` : `${daysLeft} дней осталось`}
-              </span>
-              <span className="text-sm text-[var(--muted-foreground)]">Дедлайн: {formatDate(goal.deadline)}</span>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <div className="flex min-w-0 items-start gap-3">
+            <Button variant="ghost" size="icon" className="shrink-0" asChild>
+              <Link href="/goals">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xl font-bold break-words sm:text-2xl">{goal.name}</h2>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
+                <CategoryBadge name={goal.category} />
+                <span className={`flex items-center gap-1 ${isOverdue ? 'text-red-500' : isCompleted ? 'text-green-600' : 'text-[var(--muted-foreground)]'}`}>
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                  {isCompleted ? 'Выполнено!' : isOverdue ? `Просрочена на ${Math.abs(daysLeft)} дн.` : `${daysLeft} дней осталось`}
+                </span>
+                <span className="text-[var(--muted-foreground)]">Дедлайн: {formatDate(goal.deadline)}</span>
+              </div>
+              {goal.description && (
+                <p className="mt-2 text-sm text-[var(--muted-foreground)]">{goal.description}</p>
+              )}
             </div>
-            {goal.description && (
-              <p className="text-sm text-[var(--muted-foreground)] mt-2">{goal.description}</p>
-            )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:ml-auto">
             <AddProgressModal goalId={goal.id} unit={goal.unit} currentValue={goal.currentValue} />
             <Button
               variant="outline"
@@ -80,10 +88,10 @@ export default function GoalDetailPage() {
 
         {/* Big progress */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-end justify-between mb-3">
-              <div>
-                <p className="text-4xl font-bold">
+          <CardContent className="p-4 sm:p-6">
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-3xl font-bold sm:text-4xl">
                   {goal.currentValue}
                   <span className="text-lg text-[var(--muted-foreground)] ml-1">{goal.unit}</span>
                 </p>
@@ -91,7 +99,7 @@ export default function GoalDetailPage() {
                   из {goal.targetValue} {goal.unit}
                 </p>
               </div>
-              <p className={`text-3xl font-bold ${isCompleted ? 'text-green-600' : 'text-[var(--primary)]'}`}>
+              <p className={`text-2xl font-bold sm:text-3xl ${isCompleted ? 'text-green-600' : 'text-[var(--primary)]'}`}>
                 {pct}%
               </p>
             </div>
@@ -103,13 +111,13 @@ export default function GoalDetailPage() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 gap-4 min-w-0 lg:grid-cols-5 lg:gap-6">
           {/* Chart */}
           <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle className="text-base">Прогресс по времени</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="min-w-0">
               <GoalProgressChart
                 progressEntries={goalProgressEntries}
                 targetValue={goal.targetValue}
@@ -123,7 +131,7 @@ export default function GoalDetailPage() {
             <CardHeader>
               <CardTitle className="text-base">Связанные привычки</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="min-w-0">
               <LinkedHabitsList habits={linkedHabits} stats={mockHabitStats} />
             </CardContent>
           </Card>

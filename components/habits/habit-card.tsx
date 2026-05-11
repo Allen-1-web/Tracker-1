@@ -17,11 +17,11 @@ interface HabitCardProps {
 
 export function HabitCard({ habit, stats, completedToday, onToggle }: HabitCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow group">
-      <CardContent className="p-5">
-        <div className="flex items-start gap-3 mb-3">
+    <Card className="group border-0 bg-transparent shadow-none hover:bg-[var(--muted)]/35 dark:hover:bg-[var(--muted)]/45 transition-colors">
+      <CardContent className="p-3.5">
+        <div className="flex items-start gap-2.5 mb-2">
           <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg"
             style={{ backgroundColor: habit.color + '20' }}
           >
             {habit.icon}
@@ -49,7 +49,7 @@ export function HabitCard({ habit, stats, completedToday, onToggle }: HabitCardP
 
         {stats && (
           <>
-            <Progress value={stats.completionRate30} className="mb-2" indicatorColor={habit.color} />
+            <Progress value={stats.completionRate30} className="mb-1.5" indicatorColor={habit.color} />
             <div className="flex items-center justify-between">
               <span className="text-xs text-[var(--muted-foreground)]">
                 {stats.completionRate30}% за 30 дней

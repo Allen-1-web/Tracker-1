@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Edit2, Archive, Trash2, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, Archive, Trash2, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { AppLayout } from '@/components/layout/app-layout'
+import { EmptyState } from '@/components/shared/empty-state'
 import { HabitStatsRow } from '@/components/habits/habit-stats-row'
 import { HabitHeatmap } from '@/components/habits/habit-heatmap'
 import { HabitWeeklyChart } from '@/components/habits/habit-weekly-chart'
@@ -27,9 +28,12 @@ export default function HabitDetailPage() {
   if (!habit) {
     return (
       <AppLayout title="Привычка не найдена">
-        <p className="text-[var(--muted-foreground)]">
-          <Link href="/habits" className="text-[var(--primary)] hover:underline">← Назад</Link>
-        </p>
+        <EmptyState
+          icon="🔍"
+          title="Привычка не найдена"
+          description="Возможно, она удалена или ссылка устарела."
+          action={{ label: 'К списку привычек', href: '/habits' }}
+        />
       </AppLayout>
     )
   }
@@ -51,33 +55,35 @@ export default function HabitDetailPage() {
 
   return (
     <AppLayout title={habit.name}>
-      <div className="max-w-4xl space-y-6">
+      <div className="max-w-4xl space-y-6 min-w-0">
         {/* Header */}
-        <div className="flex items-start gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/habits">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <div className="flex items-center gap-4 flex-1">
-            <div
-              className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl"
-              style={{ backgroundColor: habit.color + '20' }}
-            >
-              {habit.icon}
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold">{habit.name}</h2>
-              <div className="flex items-center gap-2 mt-1">
-                <CategoryBadge name={habit.category} />
-                <span className="text-xs text-[var(--muted-foreground)]">{frequencyLabel}</span>
+        <div className="flex flex-col gap-4">
+          <div className="flex min-w-0 items-start gap-3">
+            <Button variant="ghost" size="icon" className="shrink-0" asChild>
+              <Link href="/habits">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xl sm:h-14 sm:w-14 sm:text-2xl"
+                style={{ backgroundColor: habit.color + '20' }}
+              >
+                {habit.icon}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-xl font-bold break-words sm:text-2xl">{habit.name}</h2>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <CategoryBadge name={habit.category} />
+                  <span className="text-xs text-[var(--muted-foreground)]">{frequencyLabel}</span>
+                </div>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 pl-0 sm:pl-12">
             {!completedToday && (
-              <Button onClick={() => toggleHabitLog(habit.id)}>
-                <CheckCircle2 className="h-4 w-4 mr-1.5" /> Отметить
+              <Button onClick={() => toggleHabitLog(habit.id)} className="min-w-0 flex-1 sm:flex-none">
+                <CheckCircle2 className="h-4 w-4 mr-1.5 shrink-0" /> Отметить
               </Button>
             )}
             <Button
@@ -114,7 +120,7 @@ export default function HabitDetailPage() {
           <CardHeader>
             <CardTitle className="text-base">Активность за год</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0">
             <HabitHeatmap logs={logs} color={habit.color} />
           </CardContent>
         </Card>
@@ -124,7 +130,7 @@ export default function HabitDetailPage() {
           <CardHeader>
             <CardTitle className="text-base">Выполнение по неделям</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0">
             <HabitWeeklyChart logs={recentLogs} color={habit.color} />
           </CardContent>
         </Card>

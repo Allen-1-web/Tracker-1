@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Target, Clock } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { EmptyState } from '@/components/shared/empty-state'
 import { getDaysRemaining } from '@/lib/utils'
 import type { Goal } from '@/lib/types'
 
@@ -15,8 +16,8 @@ function GoalMiniCard({ goal }: GoalMiniCardProps) {
 
   return (
     <Link href={`/goals/${goal.id}`}>
-      <Card className="min-w-[220px] hover:shadow-md transition-shadow cursor-pointer">
-        <CardContent className="p-4">
+      <Card className="min-w-[200px] cursor-pointer border-0 bg-transparent shadow-none hover:bg-[var(--muted)]/35 dark:hover:bg-[var(--muted)]/45">
+        <CardContent className="p-3.5">
           <div className="flex items-start gap-2 mb-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--primary)]/10">
               <Target className="h-4 w-4 text-[var(--primary)]" />
@@ -51,14 +52,18 @@ export function ActiveGoalCards({ goals }: ActiveGoalCardsProps) {
 
   if (activeGoals.length === 0) {
     return (
-      <p className="text-sm text-[var(--muted-foreground)] text-center py-4">
-        Нет активных целей. <Link href="/goals" className="text-[var(--primary)] hover:underline">Добавить цель →</Link>
-      </p>
+      <EmptyState
+        icon="🎯"
+        title="Нет активных целей"
+        description="Добавьте цель или откройте список всех целей — выполненные здесь не показываются."
+        compact
+        action={{ label: 'Перейти к целям', href: '/goals' }}
+      />
     )
   }
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1">
+    <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
       {activeGoals.map((goal) => (
         <GoalMiniCard key={goal.id} goal={goal} />
       ))}

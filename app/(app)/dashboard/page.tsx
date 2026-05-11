@@ -43,11 +43,11 @@ export default function DashboardPage() {
 
   return (
     <AppLayout title="Дашборд">
-      <div className="space-y-6 max-w-4xl">
+      <div className="max-w-4xl space-y-4 min-w-0">
         {/* Greeting */}
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <DashboardGreeting name={user.name} quote={quote} />
-          <Button asChild>
+          <Button asChild className="w-full shrink-0 sm:w-auto">
             <Link href="/habits">
               <Plus className="h-4 w-4 mr-1" /> Привычка
             </Link>
@@ -66,25 +66,25 @@ export default function DashboardPage() {
         />
 
         <Link href="/nutrition" className="block">
-          <Card className="transition-colors hover:bg-[var(--accent)] cursor-pointer border-[var(--border)]">
-            <CardContent className="flex items-center justify-between gap-4 p-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100">
+          <Card className="cursor-pointer hover:bg-[var(--muted)]/30 dark:hover:bg-[var(--muted)]/40">
+            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-start gap-3 sm:items-center">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100">
                   <UtensilsCrossed className="h-5 w-5 text-emerald-600" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-semibold text-[var(--foreground)]">Питание и КБЖУ</p>
                   <p className="text-sm text-[var(--muted-foreground)]">
                     Сегодня: {todayCalories} / {nutritionGoals.calories} ккал · дневник и рекомендации
                   </p>
                 </div>
               </div>
-              <span className="text-sm font-medium text-[var(--primary)] shrink-0">Открыть →</span>
+              <span className="text-sm font-medium text-[var(--primary)] sm:shrink-0">Открыть →</span>
             </CardContent>
           </Card>
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* Today habits */}
           <Card className="lg:col-span-3">
             <CardHeader className="pb-3">
@@ -105,8 +105,10 @@ export default function DashboardPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Активность за 7 дней</CardTitle>
             </CardHeader>
-            <CardContent>
-              <WeeklyActivityStrip />
+            <CardContent className="min-w-0 overflow-x-auto">
+              <div className="min-w-[280px]">
+                <WeeklyActivityStrip />
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -121,7 +123,7 @@ export default function DashboardPage() {
               </Link>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0">
             <ActiveGoalCards goals={goals} />
           </CardContent>
         </Card>

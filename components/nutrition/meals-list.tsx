@@ -1,6 +1,7 @@
 'use client'
 
 import { Trash2 } from 'lucide-react'
+import { EmptyState } from '@/components/shared/empty-state'
 import { useStore } from '@/lib/store'
 import type { MealEntry, MealType } from '@/lib/types'
 
@@ -22,9 +23,12 @@ export function MealsList({ entries }: MealsListProps) {
 
   if (entries.length === 0) {
     return (
-      <div className="py-10 text-center text-sm text-[var(--muted-foreground)]">
-        Сегодня ещё ничего не добавлено
-      </div>
+      <EmptyState
+        icon="🍽️"
+        title="Приёмов пищи нет"
+        description="Добавьте продукты через поиск выше — записи появятся здесь."
+        compact
+      />
     )
   }
 

@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { formFieldErrorClass } from '@/lib/utils'
 
 const schema = z.object({
   email: z.string().email('Введите корректный email'),
@@ -33,13 +34,15 @@ export default function LoginPage() {
       <h2 className="text-2xl font-bold mb-2">С возвращением!</h2>
       <p className="text-[var(--muted-foreground)] mb-8">Войдите в свой аккаунт</p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
             placeholder="you@example.com"
+            aria-invalid={!!errors.email}
+            className={formFieldErrorClass(!!errors.email)}
             {...register('email')}
           />
           {errors.email && (
@@ -58,6 +61,8 @@ export default function LoginPage() {
             id="password"
             type="password"
             placeholder="••••••••"
+            aria-invalid={!!errors.password}
+            className={formFieldErrorClass(!!errors.password)}
             {...register('password')}
           />
           {errors.password && (

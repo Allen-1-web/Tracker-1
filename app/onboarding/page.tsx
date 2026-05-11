@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { z } from 'zod'
 import { Zap, ArrowRight, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,6 +10,25 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useStore } from '@/lib/store'
 import { mockCategories } from '@/lib/mock-data'
+import { formFieldErrorClass } from '@/lib/utils'
+
+const habitStepSchema = z.object({
+  name: z.string().min(1, 'Введите название привычки'),
+  category: z.string().min(1, 'Выберите категорию'),
+  icon: z.string().min(1, 'Выберите иконку'),
+})
+
+const goalStepSchema = z.object({
+  name: z.string().min(1, 'Введите название цели'),
+  target: z
+    .string()
+    .min(1, 'Введите целевое значение')
+    .refine((s) => {
+      const n = Number(s.replace(',', '.'))
+      return Number.isFinite(n) && n > 0
+    }, 'Введите число больше 0'),
+  deadline: z.string().min(1, 'Укажите дедлайн'),
+})
 
 const STEP_LABELS = ['Привычка', 'Цель', 'Telegram']
 
@@ -54,13 +74,30 @@ export default function OnboardingPage() {
   const [goalUnit, setGoalUnit] = useState('')
   const [goalDeadline, setGoalDeadline] = useState('')
 
+  const [habitFieldErrors, setHabitFieldErrors] = useState<Record<string, string>>({})
+  const [goalFieldErrors, setGoalFieldErrors] = useState<Record<string, string>>({})
+
   const handleAddHabit = () => {
-    if (!habitName.trim()) return
+    setHabitFieldErrors({})
+    const parsed = habitStepSchema.safeParse({
+      name: habitName.trim(),
+      category: habitCategory,
+      icon: habitIcon,
+    })
+    if (!parsed.success) {
+      const next: Record<string, string> = {}
+      for (const issue of parsed.error.issues) {
+        const k = issue.path[0]
+        if (typeof k === 'string' && !next[k]) next[k] = issue.message
+      }
+      setHabitFieldErrors(next)
+      return
+    }
     addHabit({
-      name: habitName,
+      name: habitName.trim(),
       icon: habitIcon,
       color: '#6366f1',
-      category: habitCategory || 'Здоровье',
+      category: habitCategory,
       frequency: 'daily',
       isArchived: false,
     })
@@ -68,18 +105,32 @@ export default function OnboardingPage() {
   }
 
   const handleAddGoal = () => {
-    if (goalName.trim() && goalTarget && goalDeadline) {
-      addGoal({
-        name: goalName,
-        type: 'numeric',
-        targetValue: Number(goalTarget),
-        currentValue: 0,
-        unit: goalUnit,
-        category: 'Продуктивность',
-        deadline: new Date(goalDeadline),
-        linkedHabitIds: [],
-      })
+    setGoalFieldErrors({})
+    const parsed = goalStepSchema.safeParse({
+      name: goalName.trim(),
+      target: goalTarget,
+      deadline: goalDeadline,
+    })
+    if (!parsed.success) {
+      const next: Record<string, string> = {}
+      for (const issue of parsed.error.issues) {
+        const k = issue.path[0]
+        if (typeof k === 'string' && !next[k]) next[k] = issue.message
+      }
+      setGoalFieldErrors(next)
+      return
     }
+    const n = Number(goalTarget.replace(',', '.'))
+    addGoal({
+      name: goalName.trim(),
+      type: 'numeric',
+      targetValue: n,
+      currentValue: 0,
+      unit: goalUnit,
+      category: 'Продуктивность',
+      deadline: new Date(goalDeadline),
+      linkedHabitIds: [],
+    })
     setStep(2)
   }
 
@@ -121,18 +172,42 @@ export default function OnboardingPage() {
                 <Input
                   placeholder="Например: Утренняя зарядка"
                   value={habitName}
-                  onChange={(e) => setHabitName(e.target.value)}
+                  onChange={(e) => {
+                    setHabitName(e.target.value)
+                    setHabitFieldErrors((p) => {
+                      const { name: _, ...rest } = p
+                      return rest
+                    })
+                  }}
+                  aria-invalid={!!habitFieldErrors.name}
+                  className={formFieldErrorClass(!!habitFieldErrors.name)}
                 />
+                {habitFieldErrors.name && (
+                  <p className="text-xs text-[var(--destructive)]">{habitFieldErrors.name}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
                 <Label>Иконка</Label>
-                <div className="flex flex-wrap gap-2">
+                <div
+                  className={
+                    habitFieldErrors.icon
+                      ? `rounded-lg p-0.5 ${formFieldErrorClass(true)}`
+                      : 'rounded-lg p-0.5'
+                  }
+                >
+                  <div className="flex flex-wrap gap-2">
                   {ICONS.map((icon) => (
                     <button
                       key={icon}
                       type="button"
-                      onClick={() => setHabitIcon(icon)}
+                      onClick={() => {
+                        setHabitIcon(icon)
+                        setHabitFieldErrors((p) => {
+                          const { icon: _, ...rest } = p
+                          return rest
+                        })
+                      }}
                       className={`text-xl p-2 rounded-lg border-2 transition-colors ${
                         habitIcon === icon ? 'border-[var(--primary)]' : 'border-[var(--border)]'
                       }`}
@@ -141,12 +216,28 @@ export default function OnboardingPage() {
                     </button>
                   ))}
                 </div>
+                </div>
+                {habitFieldErrors.icon && (
+                  <p className="text-xs text-[var(--destructive)]">{habitFieldErrors.icon}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
                 <Label>Категория</Label>
-                <Select value={habitCategory} onValueChange={setHabitCategory}>
-                  <SelectTrigger>
+                <Select
+                  value={habitCategory}
+                  onValueChange={(v) => {
+                    setHabitCategory(v)
+                    setHabitFieldErrors((p) => {
+                      const { category: _, ...rest } = p
+                      return rest
+                    })
+                  }}
+                >
+                  <SelectTrigger
+                    aria-invalid={!!habitFieldErrors.category}
+                    className={formFieldErrorClass(!!habitFieldErrors.category)}
+                  >
                     <SelectValue placeholder="Выберите..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -157,9 +248,12 @@ export default function OnboardingPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                {habitFieldErrors.category && (
+                  <p className="text-xs text-[var(--destructive)]">{habitFieldErrors.category}</p>
+                )}
               </div>
 
-              <Button onClick={handleAddHabit} disabled={!habitName.trim()} className="w-full">
+              <Button type="button" onClick={handleAddHabit} className="w-full">
                 Добавить и продолжить <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
             </div>
@@ -180,14 +274,42 @@ export default function OnboardingPage() {
                 <Input
                   placeholder="Например: Прочитать 20 книг"
                   value={goalName}
-                  onChange={(e) => setGoalName(e.target.value)}
+                  onChange={(e) => {
+                    setGoalName(e.target.value)
+                    setGoalFieldErrors((p) => {
+                      const { name: _, ...rest } = p
+                      return rest
+                    })
+                  }}
+                  aria-invalid={!!goalFieldErrors.name}
+                  className={formFieldErrorClass(!!goalFieldErrors.name)}
                 />
+                {goalFieldErrors.name && (
+                  <p className="text-xs text-[var(--destructive)]">{goalFieldErrors.name}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Целевое значение</Label>
-                  <Input type="number" placeholder="20" value={goalTarget} onChange={(e) => setGoalTarget(e.target.value)} />
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="20"
+                    value={goalTarget}
+                    onChange={(e) => {
+                      setGoalTarget(e.target.value)
+                      setGoalFieldErrors((p) => {
+                        const { target: _, ...rest } = p
+                        return rest
+                      })
+                    }}
+                    aria-invalid={!!goalFieldErrors.target}
+                    className={formFieldErrorClass(!!goalFieldErrors.target)}
+                  />
+                  {goalFieldErrors.target && (
+                    <p className="text-xs text-[var(--destructive)]">{goalFieldErrors.target}</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label>Единица</Label>
@@ -197,14 +319,29 @@ export default function OnboardingPage() {
 
               <div className="space-y-1.5">
                 <Label>Дедлайн</Label>
-                <Input type="date" value={goalDeadline} onChange={(e) => setGoalDeadline(e.target.value)} />
+                <Input
+                  type="date"
+                  value={goalDeadline}
+                  onChange={(e) => {
+                    setGoalDeadline(e.target.value)
+                    setGoalFieldErrors((p) => {
+                      const { deadline: _, ...rest } = p
+                      return rest
+                    })
+                  }}
+                  aria-invalid={!!goalFieldErrors.deadline}
+                  className={formFieldErrorClass(!!goalFieldErrors.deadline)}
+                />
+                {goalFieldErrors.deadline && (
+                  <p className="text-xs text-[var(--destructive)]">{goalFieldErrors.deadline}</p>
+                )}
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
+                <Button type="button" variant="outline" onClick={() => setStep(2)} className="flex-1">
                   Пропустить
                 </Button>
-                <Button onClick={handleAddGoal} className="flex-1">
+                <Button type="button" onClick={handleAddGoal} className="flex-1">
                   Добавить <ArrowRight className="h-4 w-4 ml-1.5" />
                 </Button>
               </div>

@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { formFieldErrorClass } from '@/lib/utils'
 
 const schema = z.object({
   name: z.string().min(2, 'Введите имя'),
@@ -34,10 +35,16 @@ export default function RegisterPage() {
       <h2 className="text-2xl font-bold mb-2">Создать аккаунт</h2>
       <p className="text-[var(--muted-foreground)] mb-8">Начни отслеживать привычки уже сегодня</p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div className="space-y-1.5">
           <Label htmlFor="name">Имя</Label>
-          <Input id="name" placeholder="Алексей" {...register('name')} />
+          <Input
+            id="name"
+            placeholder="Алексей"
+            aria-invalid={!!errors.name}
+            className={formFieldErrorClass(!!errors.name)}
+            {...register('name')}
+          />
           {errors.name && (
             <p className="text-xs text-[var(--destructive)]">{errors.name.message}</p>
           )}
@@ -45,7 +52,14 @@ export default function RegisterPage() {
 
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="you@example.com" {...register('email')} />
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            aria-invalid={!!errors.email}
+            className={formFieldErrorClass(!!errors.email)}
+            {...register('email')}
+          />
           {errors.email && (
             <p className="text-xs text-[var(--destructive)]">{errors.email.message}</p>
           )}
@@ -53,7 +67,14 @@ export default function RegisterPage() {
 
         <div className="space-y-1.5">
           <Label htmlFor="password">Пароль</Label>
-          <Input id="password" type="password" placeholder="Минимум 6 символов" {...register('password')} />
+          <Input
+            id="password"
+            type="password"
+            placeholder="Минимум 6 символов"
+            aria-invalid={!!errors.password}
+            className={formFieldErrorClass(!!errors.password)}
+            {...register('password')}
+          />
           {errors.password && (
             <p className="text-xs text-[var(--destructive)]">{errors.password.message}</p>
           )}

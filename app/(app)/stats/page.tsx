@@ -17,6 +17,7 @@ import {
 import { subWeeks, format, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { AppLayout } from '@/components/layout/app-layout'
+import { EmptyState } from '@/components/shared/empty-state'
 import { HabitHeatmap } from '@/components/habits/habit-heatmap'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -95,18 +96,20 @@ export default function StatsPage() {
 
   return (
     <AppLayout title="Статистика">
-      <div className="max-w-4xl space-y-6">
+      <div className="max-w-4xl space-y-6 min-w-0">
         {/* Period selector */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Аналитика</h2>
-          <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
-            <TabsList>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <h2 className="text-lg font-semibold shrink-0">Аналитика</h2>
+          <div className="w-full min-w-0 overflow-x-auto pb-0.5 sm:w-auto sm:max-w-[min(100%,28rem)]">
+            <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
+              <TabsList className="w-max max-w-full">
               <TabsTrigger value="7">Неделя</TabsTrigger>
               <TabsTrigger value="30">Месяц</TabsTrigger>
               <TabsTrigger value="90">3 мес.</TabsTrigger>
               <TabsTrigger value="365">Год</TabsTrigger>
             </TabsList>
-          </Tabs>
+            </Tabs>
+          </div>
         </div>
 
         {/* Summary cards */}
@@ -143,7 +146,21 @@ export default function StatsPage() {
               <CardTitle className="text-base">Лучшие привычки 🏆</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {topHabits.map((s, i) => (
+              {topHabits.length === 0 ? (
+                <EmptyState
+                  icon="🏆"
+                  title={activeHabits.length === 0 ? 'Нет активных привычек' : 'Пока нет лидеров'}
+                  description={
+                    activeHabits.length === 0
+                      ? 'Добавьте привычку — тогда здесь появится рейтинг по выполнению.'
+                      : 'Статистика появится после накопления данных о выполнении.'
+                  }
+                  compact
+                  className="py-6"
+                  action={activeHabits.length === 0 ? { label: 'К привычкам', href: '/habits' } : undefined}
+                />
+              ) : (
+                topHabits.map((s, i) => (
                 <div key={s.habitId} className="flex items-center gap-3">
                   <span className="text-[var(--muted-foreground)] text-sm w-5">#{i + 1}</span>
                   <span className="text-lg">{s.habit?.icon}</span>
@@ -158,7 +175,8 @@ export default function StatsPage() {
                   </div>
                   <span className="text-sm font-semibold text-green-600">{s.completionRate30}%</span>
                 </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
 
@@ -168,7 +186,21 @@ export default function StatsPage() {
               <CardTitle className="text-base">Требуют внимания ⚠️</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {weakHabits.map((s) => (
+              {weakHabits.length === 0 ? (
+                <EmptyState
+                  icon="✨"
+                  title={activeHabits.length === 0 ? 'Нечего отслеживать' : 'Всё в порядке'}
+                  description={
+                    activeHabits.length === 0
+                      ? 'Сначала создайте привычки — блок подскажет, на чём сфокусироваться.'
+                      : 'Нет привычек с низким процентом за последние 30 дней.'
+                  }
+                  compact
+                  className="py-6"
+                  action={activeHabits.length === 0 ? { label: 'К привычкам', href: '/habits' } : undefined}
+                />
+              ) : (
+                weakHabits.map((s) => (
                 <div key={s.habitId} className="flex items-center gap-3">
                   <span className="text-lg">{s.habit?.icon}</span>
                   <div className="flex-1 min-w-0">
@@ -182,7 +214,8 @@ export default function StatsPage() {
                   </div>
                   <span className="text-sm font-semibold text-orange-500">{s.completionRate30}%</span>
                 </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
         </div>
@@ -192,7 +225,17 @@ export default function StatsPage() {
           <CardHeader>
             <CardTitle className="text-base">Выполнение по неделям</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0">
+            {activeHabits.length === 0 ? (
+              <EmptyState
+                icon="📅"
+                title="Нет привычек для графика"
+                description="Добавьте хотя бы одну активную привычку — тогда появится динамика выполнения по неделям."
+                compact
+                className="py-8"
+                action={{ label: 'К привычкам', href: '/habits' }}
+              />
+            ) : (
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={weeklyData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                 <defs>
@@ -211,6 +254,7 @@ export default function StatsPage() {
                 <Area type="monotone" dataKey="pct" stroke="#6366f1" strokeWidth={2} fill="url(#gradPct)" />
               </AreaChart>
             </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -219,7 +263,17 @@ export default function StatsPage() {
           <CardHeader>
             <CardTitle className="text-base">Привычки по категориям</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0">
+            {categoryData.length === 0 ? (
+              <EmptyState
+                icon="🥧"
+                title="Нет категорий"
+                description="У активных привычек пока не задано распределение по категориям для диаграммы."
+                compact
+                className="py-8"
+                action={{ label: 'К привычкам', href: '/habits' }}
+              />
+            ) : (
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
@@ -243,6 +297,7 @@ export default function StatsPage() {
                 />
               </PieChart>
             </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -251,8 +306,19 @@ export default function StatsPage() {
           <CardHeader>
             <CardTitle className="text-base">Активность за год</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0 overflow-x-auto">
+            {activeHabits.length === 0 ? (
+              <EmptyState
+                icon="🗓️"
+                title="Нет данных для тепловой карты"
+                description="Создайте привычку и отмечайте дни — годовая активность появится здесь."
+                compact
+                className="py-8"
+                action={{ label: 'К привычкам', href: '/habits' }}
+              />
+            ) : (
             <HabitHeatmap logs={allLogs} />
+            )}
           </CardContent>
         </Card>
       </div>
