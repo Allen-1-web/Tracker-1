@@ -51,7 +51,7 @@ export function FoodSearch({ date }: FoodSearchProps) {
     setQuery(food.name)
   }
 
-  function handleAdd() {
+  async function handleAdd() {
     if (!selected) return
     const g = parseFloat(amount.replace(',', '.'))
     if (!Number.isFinite(g) || g <= 0) {
@@ -60,15 +60,15 @@ export function FoodSearch({ date }: FoodSearchProps) {
     }
     setAmountError(null)
     const factor = g / 100
-    addMealEntry({
-      foodId:   selected.id,
+    await addMealEntry({
+      foodId: selected.id,
       date,
       mealType,
-      amount:   g,
+      amount: g,
       calories: Math.round(selected.calories * factor),
-      protein:  Math.round(selected.protein  * factor * 10) / 10,
-      fat:      Math.round(selected.fat      * factor * 10) / 10,
-      carbs:    Math.round(selected.carbs    * factor * 10) / 10,
+      protein: Math.round(selected.protein * factor * 10) / 10,
+      fat: Math.round(selected.fat * factor * 10) / 10,
+      carbs: Math.round(selected.carbs * factor * 10) / 10,
     })
     setAdded(true)
     setTimeout(() => {

@@ -18,8 +18,8 @@ export function AddGoalModal() {
   const [open, setOpen] = useState(false)
   const { addGoal } = useStore()
 
-  const handleSubmit = (data: Omit<Goal, 'id' | 'createdAt' | 'currentValue'>) => {
-    addGoal({ ...data, currentValue: 0 })
+  const handleSubmit = async (data: Omit<Goal, 'id' | 'createdAt' | 'currentValue'>) => {
+    await addGoal({ ...data, currentValue: 0 })
     setOpen(false)
   }
 

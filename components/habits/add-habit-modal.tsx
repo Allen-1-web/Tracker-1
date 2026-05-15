@@ -18,8 +18,8 @@ export function AddHabitModal() {
   const [open, setOpen] = useState(false)
   const { addHabit } = useStore()
 
-  const handleSubmit = (data: Omit<Habit, 'id' | 'createdAt'>) => {
-    addHabit(data)
+  const handleSubmit = async (data: Omit<Habit, 'id' | 'createdAt'>) => {
+    await addHabit(data)
     setOpen(false)
   }
 

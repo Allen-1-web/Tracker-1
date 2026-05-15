@@ -12,7 +12,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
 } from 'recharts'
 import { subWeeks, format, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns'
 import { ru } from 'date-fns/locale'
@@ -23,7 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StreakBadge } from '@/components/shared/streak-badge'
 import { useStore } from '@/lib/store'
-import { mockHabitStats, getHabitLogsForRange } from '@/lib/mock-data'
+import { computeAllHabitStats, getHabitLogsForRange } from '@/lib/habit-analytics'
 
 type Period = '7' | '30' | '90' | '365'
 
@@ -34,6 +33,17 @@ export default function StatsPage() {
   const [period, setPeriod] = useState<Period>('30')
 
   const activeHabits = habits.filter((h) => !h.isArchived)
+
+  const habitCompletionStats = computeAllHabitStats(activeHabits, habitLogs).filter((s) =>
+    activeHabits.some((h) => h.id === s.habitId)
+  )
+  const avgCompletion =
+    habitCompletionStats.length === 0
+      ? 0
+      : Math.round(
+          habitCompletionStats.reduce((acc, h) => acc + h.completionRate30, 0) /
+            habitCompletionStats.length
+        )
 
   // Global streak (days with at least one habit done)
   const today = new Date()
@@ -46,15 +56,6 @@ export default function StatsPage() {
     if (anyDone) globalStreak++
     else break
   }
-
-  // Top / weak habits
-  const statsWithHabits = mockHabitStats
-    .map((s) => ({ ...s, habit: activeHabits.find((h) => h.id === s.habitId) }))
-    .filter((s) => s.habit)
-    .sort((a, b) => b.completionRate30 - a.completionRate30)
-
-  const topHabits = statsWithHabits.slice(0, 3)
-  const weakHabits = [...statsWithHabits].reverse().slice(0, 3)
 
   // Weekly comparison chart
   const weeksCount = period === '7' ? 1 : period === '30' ? 4 : period === '90' ? 13 : 52
@@ -92,7 +93,7 @@ export default function StatsPage() {
   const categoryData = Array.from(categoryMap.entries()).map(([name, value]) => ({ name, value }))
 
   // Heatmap data (all habits merged)
-  const allLogs = getHabitLogsForRange(activeHabits[0]?.id ?? '', 365)
+  const allLogs = getHabitLogsForRange(activeHabits[0]?.id ?? '', 365, habitLogs)
 
   return (
     <AppLayout title="Статистика">
@@ -129,93 +130,8 @@ export default function StatsPage() {
           </Card>
           <Card>
             <CardContent className="p-5">
-              <p className="text-3xl font-bold">
-                {statsWithHabits.length > 0
-                  ? Math.round(statsWithHabits.reduce((s, h) => s + h.completionRate30, 0) / statsWithHabits.length)
-                  : 0}%
-              </p>
+              <p className="text-3xl font-bold">{avgCompletion}%</p>
               <p className="text-sm text-[var(--muted-foreground)]">Средний % выполнения</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top habits */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Лучшие привычки 🏆</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {topHabits.length === 0 ? (
-                <EmptyState
-                  icon="🏆"
-                  title={activeHabits.length === 0 ? 'Нет активных привычек' : 'Пока нет лидеров'}
-                  description={
-                    activeHabits.length === 0
-                      ? 'Добавьте привычку — тогда здесь появится рейтинг по выполнению.'
-                      : 'Статистика появится после накопления данных о выполнении.'
-                  }
-                  compact
-                  className="py-6"
-                  action={activeHabits.length === 0 ? { label: 'К привычкам', href: '/habits' } : undefined}
-                />
-              ) : (
-                topHabits.map((s, i) => (
-                <div key={s.habitId} className="flex items-center gap-3">
-                  <span className="text-[var(--muted-foreground)] text-sm w-5">#{i + 1}</span>
-                  <span className="text-lg">{s.habit?.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{s.habit?.name}</p>
-                    <div className="h-1.5 bg-[var(--muted)] rounded-full mt-1">
-                      <div
-                        className="h-1.5 rounded-full bg-green-500"
-                        style={{ width: `${s.completionRate30}%` }}
-                      />
-                    </div>
-                  </div>
-                  <span className="text-sm font-semibold text-green-600">{s.completionRate30}%</span>
-                </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Weak habits */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Требуют внимания ⚠️</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {weakHabits.length === 0 ? (
-                <EmptyState
-                  icon="✨"
-                  title={activeHabits.length === 0 ? 'Нечего отслеживать' : 'Всё в порядке'}
-                  description={
-                    activeHabits.length === 0
-                      ? 'Сначала создайте привычки — блок подскажет, на чём сфокусироваться.'
-                      : 'Нет привычек с низким процентом за последние 30 дней.'
-                  }
-                  compact
-                  className="py-6"
-                  action={activeHabits.length === 0 ? { label: 'К привычкам', href: '/habits' } : undefined}
-                />
-              ) : (
-                weakHabits.map((s) => (
-                <div key={s.habitId} className="flex items-center gap-3">
-                  <span className="text-lg">{s.habit?.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{s.habit?.name}</p>
-                    <div className="h-1.5 bg-[var(--muted)] rounded-full mt-1">
-                      <div
-                        className="h-1.5 rounded-full bg-orange-400"
-                        style={{ width: `${s.completionRate30}%` }}
-                      />
-                    </div>
-                  </div>
-                  <span className="text-sm font-semibold text-orange-500">{s.completionRate30}%</span>
-                </div>
-                ))
-              )}
             </CardContent>
           </Card>
         </div>

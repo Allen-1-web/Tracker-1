@@ -15,7 +15,7 @@ import { CategoryBadge } from '@/components/shared/category-badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useStore } from '@/lib/store'
-import { mockHabitStats, getHabitLogsForRange } from '@/lib/mock-data'
+import { computeHabitStats, getHabitLogsForRange } from '@/lib/habit-analytics'
 import { format } from 'date-fns'
 
 export default function HabitDetailPage() {
@@ -38,11 +38,11 @@ export default function HabitDetailPage() {
     )
   }
 
-  const stats = mockHabitStats.find((s) => s.habitId === habit.id)
+  const stats = computeHabitStats(habit, habitLogs)
   const today = format(new Date(), 'yyyy-MM-dd')
   const completedToday = habitLogs.some((l) => l.habitId === habit.id && l.date === today && l.completed)
-  const logs = getHabitLogsForRange(habit.id, 365)
-  const recentLogs = getHabitLogsForRange(habit.id, 30)
+  const logs = getHabitLogsForRange(habit.id, 365, habitLogs)
+  const recentLogs = getHabitLogsForRange(habit.id, 30, habitLogs)
 
   const frequencyLabel =
     habit.frequency === 'daily'
@@ -82,14 +82,14 @@ export default function HabitDetailPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2 pl-0 sm:pl-12">
             {!completedToday && (
-              <Button onClick={() => toggleHabitLog(habit.id)} className="min-w-0 flex-1 sm:flex-none">
+              <Button onClick={() => void toggleHabitLog(habit.id)} className="min-w-0 flex-1 sm:flex-none">
                 <CheckCircle2 className="h-4 w-4 mr-1.5 shrink-0" /> Отметить
               </Button>
             )}
             <Button
               variant="outline"
               size="icon"
-              onClick={() => archiveHabit(habit.id)}
+              onClick={() => void archiveHabit(habit.id)}
               title="Архивировать"
             >
               <Archive className="h-4 w-4" />
@@ -154,7 +154,7 @@ export default function HabitDetailPage() {
         confirmLabel="Удалить"
         destructive
         onConfirm={() => {
-          deleteHabit(habit.id)
+          void deleteHabit(habit.id)
           router.push('/habits')
         }}
       />

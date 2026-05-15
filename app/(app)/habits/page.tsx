@@ -1,22 +1,16 @@
 'use client'
 
 import { Suspense, useState } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Search } from 'lucide-react'
 import { AppLayout } from '@/components/layout/app-layout'
 import { HabitCard } from '@/components/habits/habit-card'
 import { AddHabitModal } from '@/components/habits/add-habit-modal'
 import { EmptyState } from '@/components/shared/empty-state'
-import {
-  ListHabitsLoadingGrid,
-  ListLoadErrorState,
-  ListSummaryLineSkeleton,
-} from '@/components/shared/list-load-state'
+import { ListSummaryLineSkeleton } from '@/components/shared/list-load-state'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useStore } from '@/lib/store'
-import { mockHabitStats } from '@/lib/mock-data'
-import { useSimulatedListLoad } from '@/lib/use-simulated-list-load'
+import { computeHabitStats } from '@/lib/habit-analytics'
 import { format } from 'date-fns'
 
 type Filter = 'all' | 'active' | 'archived'
@@ -25,13 +19,6 @@ function HabitsPageInner() {
   const { habits, toggleHabitLog, habitLogs } = useStore()
   const [filter, setFilter] = useState<Filter>('active')
   const [search, setSearch] = useState('')
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const pathname = usePathname()
-  const urlFailDemo = searchParams.get('listError') === '1'
-  const [dismissedListErrorDemo, setDismissedListErrorDemo] = useState(false)
-  const shouldFailLoad = urlFailDemo && !dismissedListErrorDemo
-  const { phase, retryLoad } = useSimulatedListLoad(shouldFailLoad)
 
   const today = format(new Date(), 'yyyy-MM-dd')
 
@@ -45,16 +32,9 @@ function HabitsPageInner() {
     return true
   })
 
-  const handleListRetry = () => {
-    setDismissedListErrorDemo(true)
-    retryLoad()
-    if (searchParams.get('listError')) router.replace(pathname)
-  }
-
   return (
     <AppLayout title="Привычки">
       <div className="max-w-4xl space-y-4 min-w-0">
-        {/* Controls */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="w-full min-w-0 overflow-x-auto pb-0.5">
             <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
@@ -79,67 +59,52 @@ function HabitsPageInner() {
           </div>
         </div>
 
-        {phase === 'loading' && (
-          <>
-            <ListSummaryLineSkeleton />
-            <ListHabitsLoadingGrid />
-          </>
-        )}
+        <div className="flex gap-3 text-sm text-[var(--muted-foreground)]">
+          <span>{habits.filter((h) => !h.isArchived).length} активных</span>
+          <span>·</span>
+          <span>
+            {
+              habits.filter((h) => {
+                if (h.isArchived) return false
+                return isCompletedToday(h.id)
+              }).length
+            }{' '}
+            выполнено сегодня
+          </span>
+        </div>
 
-        {phase === 'error' && <ListLoadErrorState onRetry={handleListRetry} />}
-
-        {phase === 'ready' && (
-          <>
-            {/* Stats bar */}
-            <div className="flex gap-3 text-sm text-[var(--muted-foreground)]">
-              <span>{habits.filter((h) => !h.isArchived).length} активных</span>
-              <span>·</span>
-              <span>
-                {
-                  habits.filter((h) => {
-                    if (h.isArchived) return false
-                    return isCompletedToday(h.id)
-                  }).length
-                }{' '}
-                выполнено сегодня
-              </span>
-            </div>
-
-            {/* Grid */}
-            {filtered.length === 0 ? (
-              habits.length === 0 ? (
-                <EmptyState
-                  icon="✨"
-                  title="Нет привычек"
-                  description="Добавьте первую привычку, чтобы начать"
-                />
-              ) : search ? (
-                <EmptyState
-                  icon="🔍"
-                  title="Ничего не найдено"
-                  description="Попробуйте другой запрос или сбросьте поиск."
-                />
-              ) : (
-                <EmptyState
-                  icon="📂"
-                  title="Нет привычек по фильтру"
-                  description="В этом разделе пусто — переключите фильтр или добавьте новую привычку."
-                />
-              )
-            ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {filtered.map((habit) => (
-                  <HabitCard
-                    key={habit.id}
-                    habit={habit}
-                    stats={mockHabitStats.find((s) => s.habitId === habit.id)}
-                    completedToday={isCompletedToday(habit.id)}
-                    onToggle={() => toggleHabitLog(habit.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </>
+        {filtered.length === 0 ? (
+          habits.length === 0 ? (
+            <EmptyState
+              icon="✨"
+              title="Нет привычек"
+              description="Добавьте первую привычку, чтобы начать"
+            />
+          ) : search ? (
+            <EmptyState
+              icon="🔍"
+              title="Ничего не найдено"
+              description="Попробуйте другой запрос или сбросьте поиск."
+            />
+          ) : (
+            <EmptyState
+              icon="📂"
+              title="Нет привычек по фильтру"
+              description="В этом разделе пусто — переключите фильтр или добавьте новую привычку."
+            />
+          )
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {filtered.map((habit) => (
+              <HabitCard
+                key={habit.id}
+                habit={habit}
+                stats={computeHabitStats(habit, habitLogs)}
+                completedToday={isCompletedToday(habit.id)}
+                onToggle={() => void toggleHabitLog(habit.id)}
+              />
+            ))}
+          </div>
         )}
       </div>
     </AppLayout>
@@ -152,7 +117,11 @@ function HabitsPageFallback() {
       <div className="max-w-4xl space-y-4 min-w-0">
         <div className="h-10 w-full animate-pulse rounded-lg bg-[var(--muted)] sm:max-w-md" />
         <ListSummaryLineSkeleton />
-        <ListHabitsLoadingGrid />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-36 animate-pulse rounded-xl bg-[var(--muted)]" />
+          ))}
+        </div>
       </div>
     </AppLayout>
   )

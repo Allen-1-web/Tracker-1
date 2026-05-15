@@ -70,7 +70,7 @@ export default function LandingPage() {
             <Link href="/register">Создать аккаунт</Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <Link href="/dashboard">Смотреть демо →</Link>
+            <Link href="/login">Уже есть аккаунт — войти →</Link>
           </Button>
         </div>
 

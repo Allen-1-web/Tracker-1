@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -25,18 +26,27 @@ type ProfileForm = z.infer<typeof profileSchema>
 
 const newCategorySchema = z.object({
   name: z.string().min(1, 'Введите название').max(40, 'Не длиннее 40 символов'),
-  icon: z.string().min(1, 'Укажите эмодзи-иконку').max(4),
 })
 
+const CATEGORY_STYLE_PRESETS = [
+  { icon: '🏷️', color: '#6366f1' },
+  { icon: '⭐', color: '#22c55e' },
+  { icon: '💡', color: '#f59e0b' },
+  { icon: '❤️', color: '#ec4899' },
+  { icon: '📌', color: '#14b8a6' },
+  { icon: '✨', color: '#a855f7' },
+] as const
+
 export default function SettingsPage() {
-  const { user, updateUser, categories, addCategory, updateCategory, deleteCategory } = useStore()
+  const router = useRouter()
+  const { user, updateUser, categories, addCategory, updateCategory, deleteCategory, signOut } =
+    useStore()
   const [deleteDialogId, setDeleteDialogId] = useState<string | null>(null)
   const [newCatName, setNewCatName] = useState('')
-  const [newCatIcon, setNewCatIcon] = useState('📌')
   const [editingCatId, setEditingCatId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editNameError, setEditNameError] = useState<string | null>(null)
-  const [newCatErrors, setNewCatErrors] = useState<{ name?: string; icon?: string }>({})
+  const [newCatError, setNewCatError] = useState<string | null>(null)
 
   const {
     register: registerProfile,
@@ -53,29 +63,24 @@ export default function SettingsPage() {
     resetProfile({ name: user.name, email: user.email })
   }, [user.name, user.email, resetProfile])
 
-  const onProfileSave = (data: ProfileForm) => {
-    updateUser({ name: data.name, email: data.email })
+  const onProfileSave = async (data: ProfileForm) => {
+    await updateUser({ name: data.name, email: data.email })
   }
 
   const handleAddCategory = () => {
-    setNewCatErrors({})
-    const parsed = newCategorySchema.safeParse({ name: newCatName.trim(), icon: newCatIcon.trim() || '📌' })
+    setNewCatError(null)
+    const parsed = newCategorySchema.safeParse({ name: newCatName.trim() })
     if (!parsed.success) {
-      const e: { name?: string; icon?: string } = {}
-      for (const issue of parsed.error.issues) {
-        const k = issue.path[0]
-        if (k === 'name' || k === 'icon') e[k] = issue.message
-      }
-      setNewCatErrors(e)
+      setNewCatError(parsed.error.issues[0]?.message ?? '')
       return
     }
-    addCategory({
+    const style = CATEGORY_STYLE_PRESETS[categories.length % CATEGORY_STYLE_PRESETS.length]
+    void addCategory({
       name: parsed.data.name,
-      icon: parsed.data.icon,
-      color: '#6366f1',
+      icon: style.icon,
+      color: style.color,
     })
     setNewCatName('')
-    setNewCatIcon('📌')
   }
 
   const handleSaveEdit = (cat: Category) => {
@@ -85,7 +90,7 @@ export default function SettingsPage() {
       setEditNameError(r.error.issues[0]?.message ?? 'Ошибка')
       return
     }
-    updateCategory(cat.id, { name: r.data })
+    void updateCategory(cat.id, { name: r.data })
     setEditingCatId(null)
   }
 
@@ -153,7 +158,7 @@ export default function SettingsPage() {
               </div>
               <Switch
                 checked={user.remindersEnabled}
-                onCheckedChange={(checked) => updateUser({ remindersEnabled: checked })}
+                onCheckedChange={(checked) => void updateUser({ remindersEnabled: checked })}
               />
             </div>
             {user.remindersEnabled && (
@@ -162,7 +167,7 @@ export default function SettingsPage() {
                 <Input
                   type="time"
                   defaultValue={user.reminderTime ?? '09:00'}
-                  onBlur={(e) => updateUser({ reminderTime: e.target.value })}
+                  onBlur={(e) => void updateUser({ reminderTime: e.target.value })}
                   className="w-36"
                 />
               </div>
@@ -191,7 +196,7 @@ export default function SettingsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => updateUser({ telegramConnected: false })}
+                  onClick={() => void updateUser({ telegramConnected: false })}
                 >
                   Отключить
                 </Button>
@@ -206,7 +211,7 @@ export default function SettingsPage() {
                     <li>Перейдите по ссылке или скопируйте код авторизации</li>
                   </ol>
                 </div>
-                <Button onClick={() => updateUser({ telegramConnected: true, telegramUsername: 'user' })}>
+                <Button onClick={() => void updateUser({ telegramConnected: true, telegramUsername: 'user' })}>
                   Подключить Telegram
                 </Button>
               </div>
@@ -218,15 +223,35 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Категории</CardTitle>
-            <CardDescription>Управляйте категориями привычек и целей</CardDescription>
+            <CardDescription>Новым категориям автоматически подбираются иконка и цвет.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  placeholder="Название новой категории"
+                  value={newCatName}
+                  onChange={(e) => {
+                    setNewCatName(e.target.value)
+                    setNewCatError(null)
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                  aria-invalid={!!newCatError}
+                  className={cn('min-w-[12rem] flex-1', formFieldErrorClass(!!newCatError))}
+                />
+                <Button type="button" onClick={handleAddCategory} className="shrink-0">
+                  <Plus className="mr-1 h-4 w-4" />
+                  Добавить
+                </Button>
+              </div>
+              {newCatError && <p className="text-xs text-[var(--destructive)]">{newCatError}</p>}
+            </div>
             <div className="space-y-2">
               {categories.length === 0 ? (
                 <EmptyState
                   icon="📂"
                   title="Категорий пока нет"
-                  description="Добавьте категорию ниже — они используются для привычек и целей."
+                  description="Введите название выше — иконка и цвет подставятся сами."
                   compact
                   className="py-6"
                 />
@@ -298,39 +323,6 @@ export default function SettingsPage() {
               ))
               )}
             </div>
-            {/* Add category */}
-            <div className="space-y-2">
-            <div className="flex flex-wrap gap-2">
-              <Input
-                placeholder="Название категории"
-                value={newCatName}
-                onChange={(e) => {
-                  setNewCatName(e.target.value)
-                  setNewCatErrors((p) => ({ ...p, name: undefined }))
-                }}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
-                aria-invalid={!!newCatErrors.name}
-                className={cn('min-w-[12rem] flex-1', formFieldErrorClass(!!newCatErrors.name))}
-              />
-              <Input
-                placeholder="🏷️"
-                value={newCatIcon}
-                onChange={(e) => {
-                  setNewCatIcon(e.target.value)
-                  setNewCatErrors((p) => ({ ...p, icon: undefined }))
-                }}
-                className={cn('w-20', formFieldErrorClass(!!newCatErrors.icon))}
-              />
-              <Button type="button" onClick={handleAddCategory}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            {(newCatErrors.name || newCatErrors.icon) && (
-              <p className="text-xs text-[var(--destructive)]">
-                {[newCatErrors.name, newCatErrors.icon].filter(Boolean).join(' · ')}
-              </p>
-            )}
-            </div>
           </CardContent>
         </Card>
 
@@ -344,7 +336,7 @@ export default function SettingsPage() {
               {(['light', 'dark', 'system'] as const).map((t) => (
                 <button
                   key={t}
-                  onClick={() => updateUser({ theme: t })}
+                  onClick={() => void updateUser({ theme: t })}
                   className={`flex-1 rounded-lg border-2 p-3 text-sm font-medium transition-colors ${
                     user.theme === t
                       ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]'
@@ -369,7 +361,14 @@ export default function SettingsPage() {
                 <p className="text-sm font-medium">Выйти из аккаунта</p>
                 <p className="text-xs text-[var(--muted-foreground)]">Вы выйдете на всех устройствах</p>
               </div>
-              <Button variant="outline" size="sm">Выйти</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={() => void signOut().then(() => router.push('/login'))}
+              >
+                Выйти
+              </Button>
             </div>
             <div className="flex items-center justify-between border-t border-[var(--border)] pt-3">
               <div>
@@ -390,7 +389,7 @@ export default function SettingsPage() {
         confirmLabel="Удалить"
         destructive
         onConfirm={() => {
-          if (deleteDialogId) deleteCategory(deleteDialogId)
+          if (deleteDialogId) void deleteCategory(deleteDialogId)
           setDeleteDialogId(null)
         }}
       />

@@ -72,7 +72,7 @@ export function MealsList({ entries }: MealsListProps) {
                     <div className="flex items-center gap-3 shrink-0 ml-3">
                       <span className="text-sm font-semibold">{entry.calories} ккал</span>
                       <button
-                        onClick={() => deleteMealEntry(entry.id)}
+                        onClick={() => void deleteMealEntry(entry.id)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--muted-foreground)] hover:text-red-500"
                         aria-label="Удалить"
                       >

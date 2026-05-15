@@ -81,8 +81,8 @@ export function NutritionGoalsForm({ onClose }: NutritionGoalsFormProps) {
     return () => clearTimeout(t)
   }, [justSaved, onClose])
 
-  const onValid = (data: FormData) => {
-    updateNutritionGoals({
+  const onValid = async (data: FormData) => {
+    await updateNutritionGoals({
       calories: data.calories,
       protein: data.protein,
       fat: data.fat,

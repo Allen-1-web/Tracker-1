@@ -45,8 +45,8 @@ export function AddProgressModal({ goalId, unit, currentValue }: AddProgressModa
     defaultValues: { value: currentValue },
   })
 
-  const onSubmit = (data: FormData) => {
-    addGoalProgress({
+  const onSubmit = async (data: FormData) => {
+    await addGoalProgress({
       goalId,
       date: new Date(),
       value: data.value,

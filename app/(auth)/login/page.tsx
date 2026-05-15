@@ -1,14 +1,16 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formFieldErrorClass } from '@/lib/utils'
+import { useStore } from '@/lib/store'
 
 const schema = z.object({
   email: z.string().email('Введите корректный email'),
@@ -18,14 +20,21 @@ type FormData = z.infer<typeof schema>
 
 export default function LoginPage() {
   const router = useRouter()
+  const signIn = useStore((s) => s.signIn)
+  const [authError, setAuthError] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) })
 
-  const onSubmit = async (_data: FormData) => {
-    await new Promise((r) => setTimeout(r, 800))
+  const onSubmit = async (data: FormData) => {
+    setAuthError(null)
+    const result = await signIn(data.email, data.password)
+    if (result.error) {
+      setAuthError(result.error)
+      return
+    }
     router.push('/dashboard')
   }
 
@@ -35,6 +44,11 @@ export default function LoginPage() {
       <p className="text-[var(--muted-foreground)] mb-8">Войдите в свой аккаунт</p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        {authError && (
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200">
+            {authError}
+          </p>
+        )}
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
           <Input

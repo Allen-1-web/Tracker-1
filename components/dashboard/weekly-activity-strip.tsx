@@ -1,7 +1,12 @@
-import { getWeeklyActivity } from '@/lib/mock-data'
+'use client'
+
+import { useStore } from '@/lib/store'
+import { buildWeeklyActivity } from '@/lib/habit-analytics'
 
 export function WeeklyActivityStrip() {
-  const days = getWeeklyActivity()
+  const habits = useStore((s) => s.habits)
+  const habitLogs = useStore((s) => s.habitLogs)
+  const days = buildWeeklyActivity(habits, habitLogs)
 
   return (
     <div className="flex gap-1.5 items-end">
@@ -23,14 +28,16 @@ export function WeeklyActivityStrip() {
                     pct >= 0.8
                       ? '#22c55e'
                       : pct >= 0.5
-                      ? '#6366f1'
-                      : pct > 0
-                      ? '#e2e8f0'
-                      : '#f1f5f9',
+                        ? '#6366f1'
+                        : pct > 0
+                          ? '#e2e8f0'
+                          : '#f1f5f9',
                 }}
               />
             </div>
-            <span className={`text-xs ${isToday ? 'font-bold text-[var(--primary)]' : 'text-[var(--muted-foreground)]'}`}>
+            <span
+              className={`text-xs ${isToday ? 'font-bold text-[var(--primary)]' : 'text-[var(--muted-foreground)]'}`}
+            >
               {d.day}
             </span>
             <span className="text-xs text-[var(--muted-foreground)]">

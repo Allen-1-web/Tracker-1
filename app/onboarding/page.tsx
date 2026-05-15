@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { Zap, ArrowRight, Check } from 'lucide-react'
@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useStore } from '@/lib/store'
-import { mockCategories } from '@/lib/mock-data'
 import { formFieldErrorClass } from '@/lib/utils'
 
 const habitStepSchema = z.object({
@@ -60,8 +59,13 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { addHabit, addGoal } = useStore()
+  const { addHabit, addGoal, categories, authReady, session, dataStatus } = useStore()
   const [step, setStep] = useState(0)
+
+  useEffect(() => {
+    if (!authReady) return
+    if (!session) router.replace('/login')
+  }, [authReady, session, router])
 
   // Habit form state
   const [habitName, setHabitName] = useState('')
@@ -77,7 +81,7 @@ export default function OnboardingPage() {
   const [habitFieldErrors, setHabitFieldErrors] = useState<Record<string, string>>({})
   const [goalFieldErrors, setGoalFieldErrors] = useState<Record<string, string>>({})
 
-  const handleAddHabit = () => {
+  const handleAddHabit = async () => {
     setHabitFieldErrors({})
     const parsed = habitStepSchema.safeParse({
       name: habitName.trim(),
@@ -93,7 +97,7 @@ export default function OnboardingPage() {
       setHabitFieldErrors(next)
       return
     }
-    addHabit({
+    await addHabit({
       name: habitName.trim(),
       icon: habitIcon,
       color: '#6366f1',
@@ -104,7 +108,7 @@ export default function OnboardingPage() {
     setStep(1)
   }
 
-  const handleAddGoal = () => {
+  const handleAddGoal = async () => {
     setGoalFieldErrors({})
     const parsed = goalStepSchema.safeParse({
       name: goalName.trim(),
@@ -121,7 +125,7 @@ export default function OnboardingPage() {
       return
     }
     const n = Number(goalTarget.replace(',', '.'))
-    addGoal({
+    await addGoal({
       name: goalName.trim(),
       type: 'numeric',
       targetValue: n,
@@ -139,6 +143,14 @@ export default function OnboardingPage() {
   }
 
   const ICONS = ['🏋️', '📖', '💧', '🧘', '🏃', '🎸', '✍️', '🌿', '💊', '🚶']
+
+  if (!authReady || !session || dataStatus !== 'ready') {
+    return (
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4">
+        <p className="text-[var(--muted-foreground)]">Загрузка...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4">
@@ -241,7 +253,7 @@ export default function OnboardingPage() {
                     <SelectValue placeholder="Выберите..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockCategories.map((cat) => (
+                    {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.name}>
                         {cat.icon} {cat.name}
                       </SelectItem>

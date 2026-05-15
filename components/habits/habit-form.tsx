@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Habit } from '@/lib/types'
-import { mockCategories } from '@/lib/mock-data'
+import { useStore } from '@/lib/store'
 import { cn, formFieldErrorClass } from '@/lib/utils'
 
 const ICONS = ['🏋️', '📖', '💧', '🧘', '🇬🇧', '🏃', '🎸', '✍️', '💊', '🛌', '🍎', '💰', '🚶', '🌿', '🧹']
@@ -44,6 +44,7 @@ interface HabitFormProps {
 }
 
 export function HabitForm({ defaultValues, onSubmit, onCancel, submitLabel = 'Сохранить' }: HabitFormProps) {
+  const { categories } = useStore()
   const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     mode: 'onTouched',
@@ -155,7 +156,7 @@ export function HabitForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С
                 <SelectValue placeholder="Выберите категорию" />
               </SelectTrigger>
               <SelectContent>
-                {mockCategories.map((cat) => (
+                {categories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.name}>
                     {cat.icon} {cat.name}
                   </SelectItem>

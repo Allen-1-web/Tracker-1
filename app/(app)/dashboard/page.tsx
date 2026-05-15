@@ -12,7 +12,8 @@ import { MotivationBlock } from '@/components/dashboard/motivation-block'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useStore } from '@/lib/store'
-import { motivationalQuotes, mockHabitStats } from '@/lib/mock-data'
+import { motivationalQuotes } from '@/lib/quotes'
+import { computeAllHabitStats } from '@/lib/habit-analytics'
 import { format } from 'date-fns'
 
 export default function DashboardPage() {
@@ -30,10 +31,13 @@ export default function DashboardPage() {
     habitLogs.some((l) => l.habitId === h.id && l.date === today && l.completed)
   ).length
 
-  const maxStreak = Math.max(...mockHabitStats.map((s) => s.currentStreak), 0)
-  const avgRate = Math.round(
-    mockHabitStats.reduce((sum, s) => sum + s.completionRate30, 0) / mockHabitStats.length
-  )
+  const activeHabits = habits.filter((h) => !h.isArchived)
+  const habitStatsList = computeAllHabitStats(activeHabits, habitLogs)
+  const maxStreak = habitStatsList.length > 0 ? Math.max(...habitStatsList.map((s) => s.currentStreak), 0) : 0
+  const avgRate =
+    habitStatsList.length > 0
+      ? Math.round(habitStatsList.reduce((sum, s) => sum + s.completionRate30, 0) / habitStatsList.length)
+      : 0
 
   const quote = motivationalQuotes[new Date().getDay() % motivationalQuotes.length]
 

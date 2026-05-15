@@ -16,13 +16,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { useStore } from '@/lib/store'
-import { mockHabitStats } from '@/lib/mock-data'
+import { computeAllHabitStats } from '@/lib/habit-analytics'
 import { getDaysRemaining, formatDate } from '@/lib/utils'
 
 export default function GoalDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { goals, habits, goalProgress, deleteGoal } = useStore()
+  const { goals, habits, goalProgress, deleteGoal, habitLogs } = useStore()
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   const goal = goals.find((g) => g.id === params.id)
@@ -45,6 +45,7 @@ export default function GoalDetailPage() {
   const isCompleted = pct >= 100
 
   const linkedHabits = habits.filter((h) => goal.linkedHabitIds.includes(h.id))
+  const linkedHabitStats = computeAllHabitStats(linkedHabits, habitLogs)
   const goalProgressEntries = goalProgress.filter((p) => p.goalId === goal.id)
 
   return (
@@ -132,7 +133,7 @@ export default function GoalDetailPage() {
               <CardTitle className="text-base">Связанные привычки</CardTitle>
             </CardHeader>
             <CardContent className="min-w-0">
-              <LinkedHabitsList habits={linkedHabits} stats={mockHabitStats} />
+              <LinkedHabitsList habits={linkedHabits} stats={linkedHabitStats} />
             </CardContent>
           </Card>
         </div>
@@ -156,7 +157,7 @@ export default function GoalDetailPage() {
         confirmLabel="Удалить"
         destructive
         onConfirm={() => {
-          deleteGoal(goal.id)
+          void deleteGoal(goal.id)
           router.push('/goals')
         }}
       />

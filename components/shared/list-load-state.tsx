@@ -32,15 +32,16 @@ export function ListSummaryLineSkeleton() {
 }
 
 interface ListLoadErrorStateProps {
+  message?: string
   onRetry: () => void
 }
 
-export function ListLoadErrorState({ onRetry }: ListLoadErrorStateProps) {
+export function ListLoadErrorState({ message, onRetry }: ListLoadErrorStateProps) {
   return (
     <EmptyState
       icon="⚠️"
-      title="Не удалось загрузить список"
-      description="Попробуйте ещё раз. Для демо ошибки откройте страницу с параметром listError=1 в адресе."
+      title="Не удалось загрузить данные"
+      description={message ?? 'Попробуйте ещё раз.'}
       action={{ label: 'Повторить', onClick: onRetry }}
     />
   )

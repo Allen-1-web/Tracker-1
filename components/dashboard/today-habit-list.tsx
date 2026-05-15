@@ -94,7 +94,7 @@ export function TodayHabitList() {
           key={habit.id}
           habit={habit}
           completed={isCompleted(habit.id)}
-          onToggle={() => toggleHabitLog(habit.id)}
+          onToggle={() => void toggleHabitLog(habit.id)}
         />
       ))}
     </div>

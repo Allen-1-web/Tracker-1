@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formFieldErrorClass } from '@/lib/utils'
+import { useStore } from '@/lib/store'
 
 const schema = z.object({
   name: z.string().min(2, 'Введите имя'),
@@ -19,14 +21,27 @@ type FormData = z.infer<typeof schema>
 
 export default function RegisterPage() {
   const router = useRouter()
+  const signUp = useStore((s) => s.signUp)
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [authInfo, setAuthInfo] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) })
 
-  const onSubmit = async (_data: FormData) => {
-    await new Promise((r) => setTimeout(r, 800))
+  const onSubmit = async (data: FormData) => {
+    setAuthError(null)
+    setAuthInfo(null)
+    const result = await signUp(data.name, data.email, data.password)
+    if (result.error) {
+      setAuthError(result.error)
+      return
+    }
+    if (result.needsEmailConfirmation) {
+      setAuthInfo('Подтвердите email по ссылке из письма, затем войдите в аккаунт.')
+      return
+    }
     router.push('/onboarding')
   }
 
@@ -36,6 +51,16 @@ export default function RegisterPage() {
       <p className="text-[var(--muted-foreground)] mb-8">Начни отслеживать привычки уже сегодня</p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        {authError && (
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200">
+            {authError}
+          </p>
+        )}
+        {authInfo && (
+          <p className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-200">
+            {authInfo}
+          </p>
+        )}
         <div className="space-y-1.5">
           <Label htmlFor="name">Имя</Label>
           <Input

@@ -20,6 +20,32 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Supabase
+
+1. Создайте проект на [Supabase](https://supabase.com) и откройте **Settings → API**: скопируйте **Project URL** и **anon public** ключ.
+2. В корне приложения создайте файл `.env.local` (см. `.env.example`):
+
+   ```env
+   SUPABASE_URL=https://ВАШ_ПРОЕКТ.supabase.co
+   SUPABASE_ANON_KEY=ваш_anon_ключ
+   ```
+
+   Укажите **только Project URL** (`https://….supabase.co`), **без** `/rest/v1` и без лишнего слеша в конце — иначе авторизация вернёт ошибку вроде *Invalid path specified in request URL*.
+
+3. В SQL Editor выполните скрипт из `supabase/schema.sql` (таблицы, RLS, триггер для профиля и категорий, справочник продуктов).
+4. Для локальной разработки в **Authentication → Providers** при необходимости отключите подтверждение email, чтобы сразу получать сессию после регистрации.
+
+Данные в приложении загружаются после входа (`signIn` / `signUp`); защищённые страницы в `app/(app)/` перенаправляют неавторизованных пользователей на `/login`.
+
+## Установка и запуск
+
+```bash
+npm install
+npm run dev
+```
+
+Откройте [http://localhost:3000](http://localhost:3000). Команды: `npm run build`, `npm run typecheck`, `npm run lint`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
